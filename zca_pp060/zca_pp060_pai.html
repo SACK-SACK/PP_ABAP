@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP060_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP060_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP060_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE EXIT_0100 INPUT.
+  CASE OK_CODE.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0100.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE USER_COMMAND_0100 INPUT.
+  CASE OK_CODE.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SEARCH'.
+      PERFORM SEARCH_DATA.
+
+    WHEN 'REFRESH'.
+      PERFORM REFRESH_SCREEN100.
+
+    WHEN 'CREATE'.
+      SET PARAMETER ID 'WER' FIELD PA_PLANT.
+      CALL TRANSACTION 'ZCAPP050' AND SKIP FIRST SCREEN.
+      CALL METHOD GO_TREE-&gt;DELETE_ALL_NODES.
+      PERFORM BUILD_NODE_TABLE.
+
+    WHEN 'PICK'.
+      DATA: LV_FNAME TYPE FIELDNAME,
+            LV_VALUE TYPE ZCA_PPT030-MRPID.
+      GET CURSOR FIELD LV_FNAME VALUE LV_VALUE.
+
+      IF LV_FNAME EQ 'ZCA_PPT010-MRPID' AND LV_VALUE IS NOT INITIAL.
+        PERFORM BDC_VIEW_MRP USING LV_VALUE.
+      ENDIF.
+
+    WHEN 'ENTR'.
+
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  CLEAR_SCREEN  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CLEAR_SCREEN INPUT.
+
+  DATA(LV_TMP) = ZCA_PPT010-PLNUM.
+  CLEAR ZCA_PPT010.
+  ZCA_PPT010-PLNUM = LV_TMP.
+
+  CLEAR: GT_DATA.
+  IF GO_ALV_GRID IS BOUND.
+    CALL METHOD GO_ALV_GRID-&gt;REFRESH_TABLE_DISPLAY.
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  F4_PLNUM  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE F4_PLNUM INPUT.
+  DATA LT_RETURN TYPE TABLE OF DDSHRETVAL.
+  SELECT  PLNUM
+          PYEAR
+          PMONTH
+          PWEEK
+          PLWRK
+          PSTTR
+          PEDTR
+          MRPID
+    FROM ZCA_PPT010 INTO TABLE GT_PLNUM_F4
+    WHERE LOEKZ NE ABAP_ON
+      AND PLWRK EQ PA_PLANT.
+
+  IF LINES( GT_PLNUM_F4 ) EQ 0.
+    MESSAGE S177 DISPLAY LIKE 'W'. " 해당 생산공장의 대한 생산계획이 없습니다.
+    RETURN.
+  ENDIF.
+
+  SORT GT_PLNUM_F4 BY PLNUM DESCENDING.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+      RETFIELD     = 'PLNUM'                 " Name of return field in FIELD_TAB
+      VALUE_ORG    = 'S'              " Value return: C: cell by cell, S: structured
+<font color ="#0000FF">*     DDIC_STRUCTURE = 'ZCA_PPT010'            " Structure of VALUE_TAB (VALUE_ORG = 'S')</font>
+      WINDOW_TITLE = '생산계획을 선택하세요'                " Title for the hit list
+    TABLES
+      VALUE_TAB    = GT_PLNUM_F4                 " Table of values: entries cell by cell
+      RETURN_TAB   = LT_RETURN.                 " Return the selected value
+
+  READ TABLE LT_RETURN INTO DATA(LS_RETURN) INDEX 1.
+
+  SORT GT_PLNUM_F4 BY PLNUM.
+
+  READ TABLE GT_PLNUM_F4 INTO GS_PLNUM_F4 WITH KEY PLNUM = LS_RETURN-FIELDVAL BINARY SEARCH.
+
+  IF GV_PLNUM NE LS_RETURN-FIELDVAL.
+    PERFORM REFRESH_SCREEN100.
+  ENDIF.
+
+  ZCA_PPT010 = CORRESPONDING #( GS_PLNUM_F4 ).
+
+  GV_PLNUM = LS_RETURN-FIELDVAL.
+
+  GV_PLAN_INFO = |{ GS_PLNUM_F4-PYEAR }년 { GS_PLNUM_F4-PMONTH }월 { GS_PLNUM_F4-PWEEK } 주차|.
+
+
+  LEAVE SCREEN .
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

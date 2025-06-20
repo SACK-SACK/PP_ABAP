@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP070_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP070_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP070_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+DATA OK_CODE TYPE SY-UCOMM.
+
+DATA: GO_DOCK_CONT         TYPE REF TO CL_GUI_DOCKING_CONTAINER,
+      GO_SPLITTER          TYPE REF TO CL_GUI_SPLITTER_CONTAINER,
+      GO_SPLIT_CONTAINER01 TYPE REF TO CL_GUI_CONTAINER,
+      GO_SPLIT_CONTAINER02 TYPE REF TO CL_GUI_CONTAINER,
+      GO_SPLIT_GRID01      TYPE REF TO CL_GUI_ALV_GRID,
+      GO_SPLIT_GRID02      TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA : GO_DISP_SET    TYPE REF TO CL_SALV_DISPLAY_SETTINGS,
+       GV_HEADER_TEXT TYPE        LVC_TITLE.
+
+DATA: GO_CONTAINER TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+      GO_ALV_GRID  TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA:
+<font color ="#0000FF">*      GT_PPT010 TYPE TABLE OF ZCA_PPT010,</font>
+<font color ="#0000FF">*      GS_PPT010 TYPE          ZCA_PPT010,</font>
+<font color ="#0000FF">*  GT_PPT020 TYPE TABLE OF ZCA_PPT020,</font>
+<font color ="#0000FF">*  GS_PPT020 TYPE          ZCA_PPT020,</font>
+  GT_PPT030 TYPE TABLE OF ZCA_PPT030,
+  GS_PPT030 TYPE          ZCA_PPT030.
+
+DATA: BEGIN OF GS_PPT010,
+        PLNUM     TYPE ZCA_PPT010-PLNUM,   " 생산계획 ID
+        PYEAR     TYPE ZCA_PPT010-PYEAR,   " 계획 년도
+        PMONTH    TYPE ZCA_PPT010-PMONTH,  " 계획 월
+        PWEEK     TYPE ZCA_PPT010-PWEEK,   " 계획 주차
+        PLWRK     TYPE ZCA_PPT010-PLWRK,   " 플랜트 ID
+        PNAME     TYPE ZCA_T001W-PNAME,    " 플랜트 명
+        PSTTR     TYPE ZCA_PPT010-PSTTR,   " 생산계획 시작일
+        PEDTR     TYPE ZCA_PPT010-PEDTR,   " 생산계획 종료일
+        MRPID     TYPE ZCA_PPT010-MRPID,   " 최종 MRP ID
+        MRPPLG    TYPE ICON-ID,            " MRP 확인 플래그
+        POPLG     TYPE ICON-ID,            " 생산오더 확인 플래그
+        PRPLG     TYPE ICON-ID,            " 생산오더 확인 플래그
+        ROW_COLOR TYPE CHAR4,              " 행 색상
+      END OF GS_PPT010,
+      GT_PPT010 LIKE TABLE OF GS_PPT010,
+
+      BEGIN OF GS_PPT020,
+        MATNR	TYPE ZCA_PPT020-MATNR, " 자재코드
+        MAKTX TYPE ZCA_MAKT-MAKTX,   " 자재명
+        GSMNG	TYPE ZCA_PPT020-GSMNG, " 계획 수량
+        MEINS	TYPE ZCA_PPT020-MEINS, " 자재 수량 단위
+      END OF GS_PPT020,
+      GT_PPT020 LIKE TABLE OF GS_PPT020,
+
+      BEGIN OF GS_MRP_DISPLAY,
+        MRPID TYPE ZCA_PPT030-MRPID, " MRPID
+        PLNUM TYPE ZCA_PPT030-PLNUM, " 생산계획 ID
+        MATNR TYPE ZCA_PPT030-MATNR, " 자재코드
+        MAKTX TYPE ZCA_MAKT-MAKTX,   " 자재명
+        STOCK TYPE ZCA_PPT030-STOCK, " 현재 재고
+        PLNQT TYPE ZCA_PPT030-PLNQT, " 확정 소요수량
+        USEQT TYPE ZCA_PPT030-USEQT, " 계획 소요수량
+        RESQT TYPE ZCA_PPT030-RESQT, " 구매요청 수량
+        MEINS TYPE ZCA_PPT030-MEINS, " 단위
+        MRPDT TYPE ZCA_PPT030-MRPDT, " MRP 실행일자
+        BANFN TYPE ZCA_PPT030-BANFN, " 구매요청 코드
+      END OF GS_MRP_DISPLAY,
+      GT_MRP_DISPLAY LIKE TABLE OF GS_MRP_DISPLAY.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA: GT_FCAT   TYPE LVC_T_FCAT,
+      GS_FCAT   TYPE LVC_S_FCAT.
+<font color ="#0000FF">* ALV Layout</font>
+DATA GS_LAYO  TYPE LVC_S_LAYO.
+
+
+DATA: BEGIN OF GS_COLLECT_DATA,
+        MATNR TYPE ZCA_PPT030-MATNR,
+        GSMNG TYPE ZCA_PPT030-USEQT,
+      END OF GS_COLLECT_DATA,
+      GT_COLLECT_DATA LIKE TABLE OF GS_COLLECT_DATA.
+
+DATA GV_TITLE_SCR100 TYPE STRING.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

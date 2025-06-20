@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP020_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP020_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP020_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP020_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES: zca_stko,
+        zca_mara,
+        zca_makt,
+        zca_t001w,
+        zca_mard.
+
+DATA ok_code TYPE sy-ucomm.
+
+TYPES: node_table_type  LIKE STANDARD TABLE OF mtreesnode WITH DEFAULT KEY.
+DATA: go_tree_con TYPE REF TO cl_gui_docking_container, "docking 컨테이너
+      go_tree     TYPE REF TO cl_gui_simple_tree.       "트리 컨테이너 참조변수
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*Tree</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* tree 최상위 BOM 정보를 담기위한 structure & itab.</font>
+DATA: BEGIN OF gs_head,
+        stlnr    TYPE zca_stko-stlnr,
+        matnr    TYPE zca_stko-matnr,
+        werks    TYPE zca_stko-werks,
+        bmeng    TYPE zca_stko-bmeng,
+        bmein    TYPE zca_stko-bmein,
+        datuv    TYPE zca_stko-datuv,
+        vaild_to TYPE zca_stko-vaild_to,
+        loekz    TYPE zca_stko-loekz,
+      END OF gs_head.
+
+DATA: gt_head LIKE TABLE OF gs_head.
+
+<font color ="#0000FF">* tree 하위 BOM 정보를 담기위한 structure & itab.</font>
+<font color ="#0000FF">*DATA: BEGIN OF gs_item,</font>
+<font color ="#0000FF">*        stlnr TYPE zca_stpo-stlnr,</font>
+<font color ="#0000FF">*        idrnk TYPE zca_stpo-idnrk,</font>
+<font color ="#0000FF">*      END OF gs_item.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*DATA : gt_stpo  LIKE TABLE OF gs_item,</font>
+<font color ="#0000FF">*       gs_stpo2 LIKE gs_item,</font>
+<font color ="#0000FF">*       gt_stpo2 LIKE TABLE OF gs_item.</font>
+
+DATA : gs_item  TYPE zca_stpo,
+       gs_item2 TYPE zca_stpo,
+       gt_item  TYPE TABLE OF zca_stpo,
+       gt_item2 TYPE TABLE OF zca_stpo.
+
+
+<font color ="#0000FF">* 자재명 자재유형 조회용</font>
+DATA : BEGIN OF gs_makt,
+         matnr TYPE zca_makt-matnr,
+         maktx TYPE zca_makt-maktx,
+         mrart TYPE zca_mara-mrart,
+       END OF gs_makt.
+
+DATA gt_makt LIKE TABLE OF gs_makt.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*alv 데이터 조회</font>
+DATA: BEGIN OF gs_stpo,
+        stlnr    TYPE zca_stpo-stlnr,
+        posnr    TYPE zca_stpo-posnr,
+        datuv    TYPE zca_stpo-datuv,
+        vaild_to TYPE zca_stpo-vaild_to,
+        idnrk    TYPE zca_stpo-idnrk,
+        maktx    TYPE zca_makt-maktx, "자재명
+        mrart    TYPE zca_mara-mrart, "자재유형
+        menge    TYPE zca_stpo-menge,
+        meins    TYPE zca_stpo-meins,
+        loekz    TYPE zca_stpo-loekz,
+        lgort    TYPE zca_mard-lgort,
+        lgobe    TYPE zca_mard-lgobe,
+
+      END OF gs_stpo.
+
+
+<font color ="#0000FF">*alv 조회용</font>
+DATA : gs_display LIKE gs_stpo,
+       gt_display LIKE TABLE OF gs_stpo.
+
+<font color ="#0000FF">*ALV</font>
+DATA go_container TYPE REF TO cl_gui_custom_container.
+DATA go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA gs_layout  TYPE lvc_s_layo.
+DATA gs_variant TYPE disvariant.
+DATA gv_save    TYPE c.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA gt_fieldcat TYPE lvc_t_fcat.
+DATA gs_fieldcat TYPE lvc_s_fcat.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

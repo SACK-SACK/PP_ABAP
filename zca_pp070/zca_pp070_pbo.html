@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP070_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP070_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP070_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE STATUS_0100 OUTPUT.
+  SET PF-STATUS '0100'.
+  SET TITLEBAR  '0100' WITH GV_TITLE_SCR100.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CLEAR_OK_CODE OUTPUT.
+  CLEAR OK_CODE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_SPLIT_ALV_GRID OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE INIT_ALV_GRID OUTPUT.
+
+  IF GO_DOCK_CONT IS INITIAL.
+
+<font color ="#0000FF">*   생산계획 Split ALV 선언부분</font>
+    PERFORM CREATE_SPLIT_OBJECT.
+
+    PERFORM SET_FCAT_FOR_SPLIT_GRID01.
+    PERFORM SET_LAYO_FOR_SPLIT_GRID01.
+    PERFORM SET_TABLE_FOR_FIRST_DISPLAY USING GO_SPLIT_GRID01
+                                              GT_PPT010.
+
+    PERFORM SET_FCAT_FOR_SPLIT_GRID02.
+    PERFORM SET_LAYO_FOR_SPLIT_GRID02 USING ''.
+    PERFORM SET_TABLE_FOR_FIRST_DISPLAY USING GO_SPLIT_GRID02
+                                              GT_PPT020.
+
+
+<font color ="#0000FF">*   MRP 결과 ALV 선언부분</font>
+    PERFORM CREATE_CONN_OBJECT.
+
+    PERFORM SET_FCAT_FOR_MRP_GRID.
+    PERFORM SET_LAYO_FOR_MRP_GRID USING ''.
+    PERFORM SET_TABLE_FOR_FIRST_DISPLAY USING GO_ALV_GRID
+                                              GT_MRP_DISPLAY.
+
+
+    PERFORM SET_HANDLER.
+
+    CALL METHOD GO_SPLITTER-&gt;SET_ROW_HEIGHT
+      EXPORTING
+        ID     = 1
+        HEIGHT = 30.
+
+
+
+  ELSE.
+    PERFORM REFRESH_FOR_SPLIT_GRID01.
+    CALL METHOD GO_SPLIT_GRID02-&gt;REFRESH_TABLE_DISPLAY.
+    CALL METHOD GO_ALV_GRID-&gt;REFRESH_TABLE_DISPLAY.
+
+
+
+  ENDIF.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

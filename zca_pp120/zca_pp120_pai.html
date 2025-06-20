@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP120_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP120_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP120_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE EXIT_0100 INPUT.
+
+  CASE OK_CODE.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 100.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE USER_COMMAND_0100 INPUT.
+
+  CASE OK_CODE.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'TAB1' OR 'TAB2' OR 'TAB3' OR 'TAB4' OR 'TAB5' OR 'TAB6' OR 'TAB7'.
+<font color ="#0000FF">*     탭을 직접 클릭했을 때 Input Field의 값을 바꾸면서 탭 제어</font>
+      PERFORM SET_TAB_AND_ODATE.
+<font color ="#0000FF">*     바뀐 Input Field의 값으로 데이터 가공</font>
+      PERFORM SELECT_ORDER_DATA.
+
+    WHEN 'CREATE'.
+<font color ="#0000FF">*     생산실적을 입력할 수 있는 Dialog Box 호출</font>
+      CALL SCREEN 0110 STARTING AT 20 1.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  CHANGE_SCREEN  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CHANGE_SCREEN INPUT.
+
+  IF GV_ORDER_DATE &gt; GV_TODATE.
+    MESSAGE E161 WITH GV_TODATE.
+    CLEAR GV_ORDER_DATE.
+  ELSE.
+    PERFORM CHANGE_SCREEN.
+    PERFORM SELECT_ORDER_DATA.
+    GV_CHECK_DATE_FLAG = ABAP_ON.
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT_0110  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE EXIT_0110 INPUT.
+  DATA LV_ANSWER TYPE C.
+  CASE OK_CODE.
+    WHEN 'CANC'.
+      IF GV_SAVE_FLAG IS INITIAL AND GV_CHANGE_FLAG IS NOT INITIAL.
+        PERFORM CONFIRM_CANC_NO_SAVE CHANGING LV_ANSWER.
+
+        CASE LV_ANSWER.
+          WHEN '1'.
+            MESSAGE '변경사항이 저장되었습니다' TYPE 'S'.
+            PERFORM EXIT_REFRESH_DATA_0110.
+            GV_CHECK_DATE_FLAG = ABAP_ON.
+            LEAVE TO SCREEN 0.
+
+          WHEN '2'.
+            PERFORM EXIT_REFRESH_DATA_0110.
+            GV_CHECK_DATE_FLAG = ABAP_ON.
+            LEAVE TO SCREEN 0.
+        ENDCASE.
+
+      ELSE.
+        PERFORM EXIT_REFRESH_DATA_0110.
+        GV_CHECK_DATE_FLAG = ABAP_ON.
+        LEAVE TO SCREEN 0.
+
+      ENDIF.
+
+
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0110  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE USER_COMMAND_0110 INPUT.
+  DATA LV_ANSWER_UCOMM_0110 TYPE C.
+
+
+  CASE OK_CODE.
+    WHEN 'SAVE'.
+      IF ZCA_AFRU-DISPOS &gt; ZCA_AFRU-PDQTY.
+        RETURN.
+      ENDIF.
+      PERFORM CHECK_SAVE USING LV_ANSWER_UCOMM_0110.
+
+    WHEN 'ALL'.
+
+      READ TABLE GT_DIALOG_DISPLAY WITH KEY STATUS_ICON = '@5D@' TRANSPORTING NO FIELDS.
+
+      IF SY-SUBRC NE 0.
+        MESSAGE '입력 가능한 실적이 없습니다.' TYPE 'I' DISPLAY LIKE 'W'.
+        RETURN.
+      ENDIF.
+      PERFORM ALL_BUTTON USING LV_ANSWER_UCOMM_0110.
+
+    WHEN 'MODE'.
+      IF ZCA_AFRU-DISPOS &gt; ZCA_AFRU-PDQTY.
+        RETURN.
+      ENDIF.
+
+      CASE GV_SCREEN_FLAG.
+        WHEN ABAP_ON.
+          IF GV_CHANGE_FLAG EQ ABAP_ON.
+            PERFORM CHECK_SAVE USING LV_ANSWER_UCOMM_0110.
+            CASE LV_ANSWER_UCOMM_0110.
+              WHEN '2' OR 'A'.
+                CLEAR ZCA_AFRU-DISPOS.
+                GV_SCREEN_FLAG = ABAP_OFF.
+                RETURN.
+            ENDCASE.
+          ENDIF.
+          GV_SCREEN_FLAG = ABAP_OFF.
+
+        WHEN OTHERS.
+          GV_SCREEN_FLAG = ABAP_ON.
+      ENDCASE.
+
+  ENDCASE.
+
+  CLEAR LV_ANSWER_UCOMM_0110.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  CHECK_DISPOS  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CHECK_DISPOS INPUT.
+
+  IF ZCA_AFRU-DISPOS &gt; ZCA_AFRU-PDQTY.
+    MESSAGE I164 DISPLAY LIKE 'E'. " 폐기량은 생산량보다 많을 수 없습니다.
+
+  ELSEIF ZCA_AFRU-DISPOS &lt;= ZCA_AFRU-PDQTY AND ZCA_AFRU-DISPOS &gt; 0.
+    ZCA_AFRU-PFQTY = ZCA_AFRU-PDQTY - ZCA_AFRU-DISPOS.
+    GV_CHANGE_FLAG = ABAP_ON.
+    GV_POSSIBLE_SAVE = ABAP_ON.
+    GV_CHANGE_FLAG = ABAP_ON.
+
+  ELSE.
+    ZCA_AFRU-PFQTY = ZCA_AFRU-PDQTY.
+
+  ENDIF.
+
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  ENTER_TRIGGER  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE ENTER_TRIGGER INPUT.
+
+  CALL METHOD CL_GUI_CFW=&gt;SET_NEW_OK_CODE
+    EXPORTING
+      NEW_CODE = 'ENTER'.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT_0120  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE EXIT_0120 INPUT.
+  CASE OK_CODE.
+    WHEN 'CANC'.
+      CLEAR: ZCA_AFRU,
+             GV_MAKTX_0110,
+             GV_MEINS1_0110,
+             GV_MEINS2_0110,
+             GV_MEINS3_0110.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

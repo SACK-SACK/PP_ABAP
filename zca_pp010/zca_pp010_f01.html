@@ -1,0 +1,1210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP010_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP010_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP010_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP010_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object .
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name = 'CONN'.
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = go_container.
+
+
+<font color ="#0000FF">*  CREATE OBJECT go_docking</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      repid     = sy-cprog                 " Report to Which This Docking Control is Linked</font>
+<font color ="#0000FF">*      dynnr     = sy-dynnr                " Screen to Which This Docking Control is Linked</font>
+<font color ="#0000FF">*      side      = cl_gui_docking_container=&gt;dock_at_right   " Side to Which Control is Docked</font>
+<font color ="#0000FF">*      extension = 800.                                     " Control Extension</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CREATE OBJECT go_alv_grid2</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      i_parent = go_docking.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv .
+  CASE sy-tcode.
+    WHEN 'ZCAPP010'.
+<font color ="#0000FF">* bom 생성 alv</font>
+      PERFORM field_catalog_zcapp010.
+
+      CALL METHOD go_alv_grid-&gt;set_table_for_first_display
+        EXPORTING
+          is_variant           = gs_variant
+          i_save               = gv_save
+<font color ="#0000FF">*         i_default            = 'X'</font>
+          is_layout            = gs_layout
+          it_toolbar_excluding = gt_toolbar
+        CHANGING
+          it_outtab            = gt_display
+          it_fieldcatalog      = gt_fieldcat.
+
+    WHEN 'ZCAPP011'.
+<font color ="#0000FF">*bom 변경 alv</font>
+      PERFORM field_catalog_zcapp020.
+
+      CALL METHOD go_alv_grid-&gt;set_table_for_first_display
+        EXPORTING
+          is_variant           = gs_variant
+          i_save               = gv_save
+<font color ="#0000FF">*         i_default            = 'X'</font>
+          is_layout            = gs_layout
+          it_toolbar_excluding = gt_toolbar
+        CHANGING
+          it_outtab            = gt_display
+          it_fieldcatalog      = gt_fieldcat.
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form field_catalog_zcapp010</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM field_catalog_zcapp010.
+<font color ="#0000FF">*  자재코드 자재유형 자재명 수량 단위 유효일자 만료일자</font>
+
+
+  REFRESH gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'IDNRK'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'IDNRK'.
+  gs_fieldcat-coltext = '투입자재'.
+  gs_fieldcat-f4availabl = 'ZCA_SH_MATNR2'.
+  gs_fieldcat-outputlen = 15.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-ref_table = 'ZCA_MAKT'.
+  gs_fieldcat-ref_field = 'MAKTX'.
+  gs_fieldcat-coltext = '자재명'.
+  gs_fieldcat-outputlen = 10.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MENGE'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'MENGE'.
+  gs_fieldcat-coltext = '수량'.
+  gs_fieldcat-outputlen = 5.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'MEINS'.
+  gs_fieldcat-coltext = '단위'.
+  gs_fieldcat-outputlen = 5.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'DATUV'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'DATUV'.
+  gs_fieldcat-coltext = '유효 시작일'.
+  gs_fieldcat-outputlen = 10.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'VAILD_TO'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'VAILD_TO'.
+  gs_fieldcat-coltext = '유효 종료일'.
+  gs_fieldcat-outputlen = 10.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form layout</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM layout .
+  gs_layout-sel_mode = 'D'.
+  gs_layout-grid_title = 'BOM Item'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form event_handler</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM event_handler .
+  SET HANDLER lcl_event_handler=&gt;handle_toolbar      FOR go_alv_grid.
+  SET HANDLER lcl_event_handler=&gt;handle_user_command FOR go_alv_grid.
+  SET HANDLER lcl_event_handler=&gt;handle_data_changed FOR go_alv_grid.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_toolbar</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_toolbar  USING p_object TYPE REF TO cl_alv_event_toolbar_set  .
+
+  DATA ls_toolbar TYPE stb_button.
+
+  CLEAR ls_toolbar.
+  ls_toolbar-butn_type = 3.
+  APPEND ls_toolbar TO p_object-&gt;mt_toolbar.
+
+  CLEAR ls_toolbar.
+  ls_toolbar-function = 'CREA'.
+  ls_toolbar-icon = icon_insert_row.
+  ls_toolbar-text = '행 추가'.
+  APPEND ls_toolbar TO p_object-&gt;mt_toolbar.
+
+  CLEAR ls_toolbar.
+  ls_toolbar-function = 'DELE'.
+  ls_toolbar-icon = icon_delete_row.
+  ls_toolbar-text = '행 삭제'.
+  APPEND ls_toolbar TO p_object-&gt;mt_toolbar.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_user_command</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_user_command  USING p_ucomm TYPE sy-ucomm.
+<font color ="#0000FF">*BOM HEADER의 정보가 입력되고 필드가 잠기면</font>
+<font color ="#0000FF">*BOM ITEM을 입력할 수 있도록 '행추가' '행삭제' 버튼 작동.</font>
+
+  CASE p_ucomm.
+    WHEN 'CREA'.
+      PERFORM create_line.
+    WHEN 'DELE'.
+      PERFORM delete_line.
+  ENDCASE.
+
+<font color ="#0000FF">* ok_code refresh</font>
+  PERFORM set_new_ok_code  USING  'UCOMM'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_new_ok_code</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_new_ok_code  USING    p_okcode TYPE sy-ucomm.
+  CALL METHOD cl_gui_cfw=&gt;set_new_ok_code
+    EXPORTING
+      new_code = p_okcode.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_line</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_line .
+<font color ="#0000FF">*  gs_display-updkz = gc_updkz_i.</font>
+  DATA lv_subrc TYPE sy-subrc.
+
+<font color ="#0000FF">*BOM Header 정보가 입력되었는지 확인.</font>
+  PERFORM check_bom_header USING lv_subrc.
+<font color ="#0000FF">* bom item alv list의 필드 값 subroutine.</font>
+  PERFORM alv_field_value .
+
+
+  IF  lv_subrc EQ 0.  "AND gv_lock IS INITIAL ).
+<font color ="#0000FF">*  alv 행 하나 추가</font>
+    APPEND gs_display TO gt_display.
+  ELSE.
+    MESSAGE s101 DISPLAY LIKE 'E'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form delete_line</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM delete_line .
+  DATA: lt_rows  TYPE lvc_t_row,
+        ls_rows  TYPE lvc_s_row,
+        lv_index TYPE sy-tabix.
+
+  CALL METHOD go_alv_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = lt_rows.
+
+  IF lt_rows IS INITIAL.
+    MESSAGE s102 DISPLAY LIKE 'E'.
+    RETURN.
+  ENDIF.
+
+<font color ="#0000FF">* 인덱스를 내림차순으로 정렬</font>
+  SORT lt_rows BY index DESCENDING.
+
+  LOOP AT lt_rows INTO ls_rows.
+    lv_index = ls_rows-index.
+    READ TABLE gt_display INDEX lv_index INTO gs_display.
+    IF sy-subrc = 0.
+      DELETE gt_display INDEX lv_index.
+      CLEAR: gs_display.
+    ENDIF.
+  ENDLOOP.
+<font color ="#0000FF">* ALV 리프레시</font>
+  CALL METHOD go_alv_grid-&gt;refresh_table_display.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form cell_control</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM cell_control .
+<font color ="#0000FF">*  DATA : lt_celltab TYPE lvc_t_styl,</font>
+<font color ="#0000FF">*         l_index    TYPE i.</font>
+<font color ="#0000FF">*  DATA : ls_celltab TYPE lvc_s_styl.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: ls_fdcat TYPE lvc_s_fcat.</font>
+<font color ="#0000FF">**        L_MODE type RAW4.</font>
+<font color ="#0000FF">** 조회 모드 일때는 데이터 수정을 막기위해</font>
+<font color ="#0000FF">** 아래의 로직을 수행하면 안됨.</font>
+<font color ="#0000FF">**  check SCREEN_MODE eq C_CHANGE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  LOOP AT gt_display INTO gs_display.</font>
+<font color ="#0000FF">*    l_index = sy-tabix.</font>
+<font color ="#0000FF">**    REFRESH gt_display.</font>
+<font color ="#0000FF">*    CLEAR gs_display-celltab.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**    IF gs_display-updkz EQ 'I'.</font>
+<font color ="#0000FF">*    PERFORM fill_celltab USING:   'IDNRK'</font>
+<font color ="#0000FF">*                                  cl_gui_alv_grid=&gt;mc_style_enabled</font>
+<font color ="#0000FF">*                                  lt_celltab.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*    IF gt_list_bk-memid EQ ztmember-memid.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'MEMID'</font>
+<font color ="#0000FF">*                                 cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                    lt_celltab.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF gt_list-stats EQ 'S'.</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'MEMID'</font>
+<font color ="#0000FF">*                                 cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                    lt_celltab.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF gt_list-updkz EQ 'D'.</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'MBRNM'</font>
+<font color ="#0000FF">*                                     cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                        lt_celltab.</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'ADDRS'</font>
+<font color ="#0000FF">*                                   cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                      lt_celltab.</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'GRADE'</font>
+<font color ="#0000FF">*                                     cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                        lt_celltab.</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'SEXXX'</font>
+<font color ="#0000FF">*                                     cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                        lt_celltab.</font>
+<font color ="#0000FF">*      PERFORM fill_celltab USING:   'WINCN'</font>
+<font color ="#0000FF">*                                     cl_gui_alv_grid=&gt;mc_style_disabled</font>
+<font color ="#0000FF">*                                        lt_celltab.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDIF.</font>
+
+<font color ="#0000FF">*    gs_display-celltab = lt_celltab.</font>
+<font color ="#0000FF">**    gt_list-celltab = lt_celltab.</font>
+<font color ="#0000FF">**    MODIFY gt_list INDEX l_index TRANSPORTING celltab.</font>
+<font color ="#0000FF">*    MODIFY gt_display FROM gs_display TRANSPORTING celltab.</font>
+<font color ="#0000FF">**    REFRESH lt_celltab.</font>
+<font color ="#0000FF">**    CLEAR lt_celltab.</font>
+<font color ="#0000FF">**    CLEAR gt_display.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fill_celltab</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fill_celltab  USING   p_fname
+                            p_style TYPE lvc_style
+                            pt_celltab TYPE lvc_t_styl.
+
+  DATA : ls_celltab TYPE lvc_s_styl.
+  ls_celltab-fieldname = p_fname.
+  ls_celltab-style = p_style.
+  INSERT ls_celltab INTO TABLE pt_celltab.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_data .
+  DATA lv_answer TYPE c.
+
+  "저장 전 저장 유무를 확인하기 위한 팝업 메시지
+  PERFORM pop_up_message CHANGING lv_answer.
+
+  " 팝업 메시지에서 '예'를 클릭하면 DB table에 데이터가 저장되는 과정을 진행
+  IF lv_answer EQ '1'.
+
+    PERFORM save_data_zca_stko. "BOM header table 데이터 저장
+
+  ELSE.
+    MESSAGE '저장을 취소하였습니다' TYPE 'S' DISPLAY LIKE 'I'.
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form default_value</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM default_value .
+<font color ="#0000FF">*  zca_stko-werks = 'P001'.</font>
+<font color ="#0000FF">*  zca_t001w-pname = '생산공장'.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_screen_input</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_screen_input .
+  DATA : BEGIN OF ls_mara,
+           mrart TYPE zca_mara-mrart,
+           meins TYPE zca_mara-meins,
+         END OF ls_mara.
+
+<font color ="#0000FF">*screen 필드 자재명 가져오기</font>
+  CLEAR zca_makt-maktx.
+  SELECT SINGLE maktx
+    FROM zca_makt
+    INTO zca_makt-maktx
+    WHERE matnr EQ zca_mara-matnr
+     AND spras EQ sy-langu .
+
+<font color ="#0000FF">*screen 필드 자재유형, 단위 가져오기</font>
+  CLEAR ls_mara.
+  SELECT SINGLE
+    mrart
+    meins
+    FROM zca_mara
+    INTO ls_mara
+    WHERE matnr EQ zca_mara-matnr.
+
+  SELECT SINGLE
+    pname
+    FROM zca_t001w
+    INTO zca_t001w-pname
+    WHERE werks EQ zca_t001w-werks.
+
+  IF sy-subrc EQ 0.
+    zca_mara-mrart = ls_mara-mrart.
+    zca_stko-bmein = ls_mara-meins.
+  ENDIF.
+
+  "선택한 자재코드에 대한 자재유형이 원재료일 경우 에러메시지 출력
+  IF zca_mara-mrart EQ 'ROH'.
+    MESSAGE '원재료는 BOM을 생성할 수 없습니다. 제품과 반제품 자재코드를 입력하세요' TYPE 'S' DISPLAY LIKE 'E'.
+    gv_lock = 'X'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form call_screen</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM call_screen .
+  CALL SCREEN 0100.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_bom_id</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_bom_id .
+
+  call function <a href ="zca_pp_get_stlnr/zca_pp_get_stlnr.html">'ZCA_PP_GET_STLNR'</a>
+    IMPORTING
+      e_stlnr = gv_bomid.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form alv_field_value</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM alv_field_value.
+  CASE sy-tcode.
+    WHEN 'ZCAPP010'.
+      CLEAR: gs_display.
+
+    WHEN 'ZCAPP011'.
+      DATA lv_stlnr TYPE zca_stko-stlnr.
+      DATA lv_posnr TYPE zca_stpo-posnr.
+
+      LOOP AT  gt_display INTO gs_display .
+        lv_stlnr = gs_display-stlnr.
+        CLEAR gs_display.
+        gs_display-stlnr = lv_stlnr.
+        gs_display-posnr = sy-tabix + 1.
+      ENDLOOP.
+  ENDCASE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_data_changed</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_data_changed USING    rr_data_changed
+                  TYPE REF TO cl_alv_changed_data_protocol.
+
+<font color ="#0000FF">*  DATA : lt_mod_cells TYPE lvc_s_modi.</font>
+<font color ="#0000FF">*         ls_cells     TYPE lvc_s_modi.</font>
+<font color ="#0000FF">**         ls_display   LIKE gs_display.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 셀의 데이터 입력시 기존데이타를 체크한다.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  LOOP AT rr_data_changed-&gt;mt_good_cells INTO ls_mod_cells.</font>
+<font color ="#0000FF">*    READ TABLE gt_display INTO gs_display INDEX ls_mod_cells-row_id ."into ls_list.</font>
+<font color ="#0000FF">*    CASE ls_mod_cells-fieldname.</font>
+<font color ="#0000FF">*      WHEN 'IDRNK'.</font>
+<font color ="#0000FF">**       해당셀 값 읽기</font>
+<font color ="#0000FF">*        PERFORM get_cell_value USING   rr_data_changed</font>
+<font color ="#0000FF">*                                       ls_mod_cells-row_id</font>
+<font color ="#0000FF">*                                       ls_mod_cells-fieldname</font>
+<font color ="#0000FF">*                              CHANGING gs_display-idnrk.</font>
+<font color ="#0000FF">**       기존데이타 체크</font>
+<font color ="#0000FF">*        PERFORM check_value_for_idrnk USING gs_display</font>
+<font color ="#0000FF">*                                            ls_mod_cells</font>
+<font color ="#0000FF">*                                            rr_data_changed.</font>
+<font color ="#0000FF">*    ENDCASE.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+
+  DATA : ls_display LIKE gs_display,
+         ls_outtab  LIKE LINE OF gt_display.
+
+  FIELD-SYMBOLS &lt;fs&gt; LIKE gt_display.
+  ASSIGN rr_data_changed-&gt;mp_mod_rows-&gt;* TO &lt;fs&gt;.
+
+  LOOP AT &lt;fs&gt; INTO ls_outtab.
+    MOVE-CORRESPONDING ls_outtab TO ls_display.
+    APPEND ls_display TO lt_modified_rows.
+  ENDLOOP.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_cell_value</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_cell_value  USING    rr_data_changed
+                      TYPE REF TO cl_alv_changed_data_protocol
+                              p_row_id
+                              p_fieldname
+                     CHANGING p_value.
+  CALL METHOD rr_data_changed-&gt;get_cell_value
+    EXPORTING
+      i_row_id    = p_row_id
+      i_fieldname = p_fieldname
+    IMPORTING
+      e_value     = p_value.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_value_for_idrnk</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_value_for_idrnk  USING    ps_display LIKE gs_display
+                                     ps_mod_cells LIKE lvc_s_modi
+                                     pr_data_changed.
+
+  DATA: ls_display LIKE gs_display.
+  DATA : lt_celltab TYPE lvc_t_styl,
+         l_index    TYPE i.
+  DATA : ls_celltab TYPE lvc_s_styl.
+
+  MOVE-CORRESPONDING ps_display TO ls_display.
+  READ TABLE gt_display INTO gs_display WITH KEY idnrk = ls_display-idnrk.
+<font color ="#0000FF">*  READ TABLE gt_list_bk WITH KEY memid = ls_list-memid.</font>
+  IF sy-subrc EQ 0.
+    CLEAR:gs_display-messg.
+
+<font color ="#0000FF">*    IF gt_list_bk EQ ls_list.</font>
+<font color ="#0000FF">*      CLEAR: ps_list-updkz.</font>
+<font color ="#0000FF">*    ELSE.</font>
+<font color ="#0000FF">*      ps_list-updkz = 'I'.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+  ENDIF.
+
+  PERFORM alv_field_value .
+
+<font color ="#0000FF">*  IF ps_list-stats EQ 'E'.</font>
+<font color ="#0000FF">*    PERFORM set_status_for_icon  USING    ps_list-stats</font>
+<font color ="#0000FF">*                                 CHANGING ps_list-icnst.</font>
+<font color ="#0000FF">*  ELSE.</font>
+<font color ="#0000FF">*    PERFORM set_status_for_icon  USING    ps_list-updkz</font>
+<font color ="#0000FF">*                                 CHANGING ps_list-icnst.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  PERFORM alv_cl_modify_cell USING   pr_data_changed</font>
+<font color ="#0000FF">*                                     ps_mod_cells-row_id</font>
+<font color ="#0000FF">*                                     'ICNST'  ps_list-icnst.</font>
+<font color ="#0000FF">**  perform DELET_VALID_VALUE changing GT_LIST.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  PERFORM alv_cl_modify_cell USING  pr_data_changed</font>
+<font color ="#0000FF">*                                    ps_mod_cells-row_id</font>
+<font color ="#0000FF">*                                    'UPDKZ'  ps_list-updkz.</font>
+
+  PERFORM alv_cl_modify_cell USING  pr_data_changed
+                                    ps_mod_cells-row_id
+                                   'MESSG' ps_display-messg.
+
+ENDFORM.                   " CHECK_VALUE_FOR_MEMID
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form alv_cl_modify_cell</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM alv_cl_modify_cell
+        USING   rr_data_changed TYPE REF TO cl_alv_changed_data_protocol
+                p_row_id
+                p_fieldname
+                p_value.
+  CALL METHOD rr_data_changed-&gt;modify_cell
+    EXPORTING
+      i_row_id    = p_row_id
+      i_fieldname = p_fieldname
+      i_value     = p_value.
+ENDFORM. " ALV_CL_MODIFY_CELL
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_value_marnr</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_value_marnr .
+  DATA lv_mrart TYPE zca_mara-mrart.
+
+  "screen 자재 유형 검사
+  SELECT SINGLE mrart
+    FROM zca_mara
+    INTO lv_mrart
+    WHERE matnr EQ zca_mara-matnr.
+
+  "선택한 자재코드에 대한 자재유형이 원재료일 경우 에러메시지 출력
+  IF lv_mrart EQ 'ROH'.
+    MESSAGE '원재료는 BOM을 생성할 수 없습니다. 제품과 반제품 자재코드를 입력하세요' TYPE 'S' DISPLAY LIKE 'E'.
+    gv_lock = 'X'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form delete_toolbar</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM delete_toolbar .
+<font color ="#0000FF">*  mc_fc_excl_all : Exclude all Grid Functions</font>
+  APPEND cl_gui_alv_grid=&gt;mc_fc_excl_all TO gt_toolbar.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form lock_screen_field_zcapp010</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM lock_screen_field_zcapp010 .
+
+  LOOP AT SCREEN.
+    CASE screen-group1.
+      WHEN 'G01'.
+        " 조회 버튼 숨김
+        screen-invisible = 1.
+        MODIFY SCREEN.
+    ENDCASE.
+
+    CASE screen-name.
+      WHEN 'ZCA_STKO-LOEKZ'.
+        screen-invisible = 1.
+        MODIFY SCREEN.
+    ENDCASE.
+  ENDLOOP.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form pop_up_message</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM pop_up_message  CHANGING pv_answer TYPE c.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar      = '저장'(l01)
+      text_question = '저장하시겠습니까?'(l02)
+      text_button_1 = '네'(l03)
+      text_button_2 = '아니요'(l04)
+    IMPORTING
+      answer        = pv_answer.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_data_zca_stko</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_data_zca_stko.
+  PERFORM create_bom_id.      "BOM ID 생성
+
+<font color ="#0000FF">*ZCA_STKO 테이블 데이터 저장</font>
+<font color ="#0000FF">*bom header table - ZCA_STKO 테이블에 저장하기 위한 local structure</font>
+  DATA : ls_stko TYPE zca_stko.
+
+  ls_stko-stlnr    = gv_bomid.
+  ls_stko-matnr    = zca_mara-matnr.
+  ls_stko-werks    = zca_t001w-werks.
+  ls_stko-bmeng    = zca_stko-bmeng.
+  ls_stko-bmein    = zca_stko-bmein.
+  ls_stko-datuv    = zca_stko-datuv.
+  ls_stko-vaild_to = zca_stko-vaild_to.
+  ls_stko-erdat    = sy-datum.
+  ls_stko-erzet    = sy-uzeit.
+  ls_stko-ernam    = sy-uname.
+
+  INSERT zca_stko FROM ls_stko.
+
+  IF sy-subrc &lt;&gt; 0.
+    ROLLBACK WORK.
+    MESSAGE '데이터 저장 중 오류가 발생했습니다' TYPE 'E'.
+  ELSE.
+    COMMIT WORK.
+
+<font color ="#0000FF">*   BOM header table에 데이터가 저장되면,</font>
+<font color ="#0000FF">*   BOM item table 데이터 저장</font>
+    PERFORM save_data_sca_stpo USING gv_bomid.
+
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form variant</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM variant .
+  gs_variant-report = sy-cprog.
+  gv_save = 'A'. "개인. 공용 저장 모두 지원
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_data_sca_stpo</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_data_sca_stpo  USING pv_bomid.
+<font color ="#0000FF">* bom item table - ZCA_STPO 테이블에 저장하기 위한 local structure & itab</font>
+  DATA : ls_stpo TYPE zca_stpo,
+         lt_stpo TYPE TABLE OF zca_stpo.
+
+  LOOP AT gt_display INTO gs_display.
+    MOVE-CORRESPONDING gs_display TO ls_stpo.
+
+    ls_stpo-stlnr    = pv_bomid.             "bom id
+    ls_stpo-posnr    = sy-tabix.             "bom item no
+    ls_stpo-erdat    = sy-datum.             "생성일자
+    ls_stpo-erzet    = sy-uzeit.             "생성시간
+    ls_stpo-ernam    = sy-uname.             "생성인
+    APPEND ls_stpo TO lt_stpo.
+
+    INSERT zca_stpo FROM ls_stpo.
+  ENDLOOP.
+
+  IF sy-subrc EQ 0.
+    COMMIT WORK.
+    MESSAGE '성공적으로 저장되었습니다' TYPE 'S'.
+    LEAVE TO SCREEN 0100.
+
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE '데이터 저장에 실패하였습니다' TYPE 'E'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_value</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_value USING pv_subrc.
+  DATA : lv_valid TYPE c.
+
+  "alv에서 변경된 값 확인
+  CALL METHOD go_alv_grid-&gt;check_changed_data
+    IMPORTING
+      e_valid = lv_valid.
+
+  CLEAR pv_subrc.
+  LOOP AT gt_display INTO gs_display.
+    IF ( gs_display IS INITIAL OR gs_display-idnrk IS INITIAL OR
+         gs_display-menge IS INITIAL OR gs_display-meins IS INITIAL
+      OR gs_display-datuv IS INITIAL OR gs_display-vaild_to IS INITIAL ).
+
+      pv_subrc = 4.
+    ENDIF.
+  ENDLOOP.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_bom_header</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_bom_header .
+<font color ="#0000FF">*ZCA_MAKT</font>
+  SELECT
+     a~stlnr
+     a~matnr
+     b~maktx
+     a~werks
+     a~bmeng
+     a~bmein
+     a~datuv
+     a~vaild_to
+     a~loekz
+    FROM zca_stko AS a
+    INNER JOIN zca_makt AS b
+    ON a~matnr EQ b~matnr
+    INTO CORRESPONDING FIELDS OF TABLE gt_stko
+    WHERE a~matnr EQ zca_mara-matnr.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form field_catalog_header</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM field_catalog_header .
+  REFRESH gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'STLNR'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'STLNR'.
+<font color ="#0000FF">*  gs_fieldcat-coltext = '투입자재'.</font>
+  gs_fieldcat-outputlen = 10.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MATNR'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'MATNR'.
+  gs_fieldcat-outputlen = 10.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-ref_table = 'ZCA_MAKT'.
+  gs_fieldcat-ref_field = 'MAKTX'.
+  gs_fieldcat-coltext = '자재명'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'WERKS'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'WERKS'.
+  gs_fieldcat-outputlen = 5.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'BMENG'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'BMENG'.
+  gs_fieldcat-outputlen = 5.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'BMEIN'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'BMEIN'.
+  gs_fieldcat-outputlen = 5.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'DATUV'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'DATUV'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'VAILD_TO'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'VAILD_TO'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'LOEKZ'.
+  gs_fieldcat-ref_table = 'ZCA_STKO'.
+  gs_fieldcat-ref_field = 'LOEKZ'.
+  gs_fieldcat-checkbox  = abap_on.
+  gs_fieldcat-outputlen = 10.
+  gs_fieldcat-just      = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form status_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM status_0100 .
+  DATA: lv_title TYPE sy-title.
+
+  CASE sy-tcode.
+    WHEN 'ZCAPP010'.
+      SET PF-STATUS '0100'.
+      lv_title = '생성'.
+      PERFORM lock_screen_field_zcapp010.
+
+    WHEN 'ZCAPP011'.
+      SET PF-STATUS '0110'.
+      lv_title = '변경'.
+      PERFORM lock_screen_field_zcapp011.
+  ENDCASE.
+
+  SET TITLEBAR '0100' WITH lv_title.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_field_for_matnr</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_field_for_matnr .
+
+  SELECT SINGLE
+      a~matnr
+      b~maktx
+      c~mrart
+      a~bmeng
+      a~bmein
+      a~datuv
+      a~vaild_to
+      a~loekz
+    FROM zca_stko AS a
+    INNER JOIN zca_makt AS b
+    ON a~matnr EQ b~matnr
+    INNER JOIN zca_mara AS c
+    ON b~matnr EQ c~matnr
+    INTO CORRESPONDING FIELDS OF gs_stko
+    WHERE a~matnr EQ zca_mara-matnr
+      AND a~loekz NE abap_on
+      AND b~spras EQ sy-langu.
+
+  IF sy-subrc EQ 0.
+    zca_makt-maktx    = gs_stko-maktx.
+    zca_mara-mrart    = gs_stko-mrart.
+
+  ELSE.
+    MESSAGE '입력하신 자재에 대한 BOM 정보가 없습니다' TYPE 'S' DISPLAY LIKE 'E'.
+    gv_lock = 'X'.
+    CLEAR : zca_makt-maktx,
+            zca_mara-mrart,
+            zca_stko-bmeng,
+            zca_stko-bmein,
+            zca_stko-datuv,
+            zca_stko-vaild_to,
+            zca_stko-vaild_to,
+            gs_display.
+    REFRESH : gt_display.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_bom_header</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_bom_header USING pv_subrc.
+
+  IF ( zca_mara-matnr IS INITIAL
+     OR zca_stko-bmeng IS INITIAL
+      OR zca_stko-bmein IS INITIAL
+       OR zca_stko-datuv IS INITIAL
+       OR zca_stko-vaild_to IS INITIAL ).
+
+    MESSAGE 'BOM Header는 필수 입력입니다. 모두 입력해주세요' TYPE 'S' DISPLAY LIKE 'E'.
+    pv_subrc = 4.
+  ELSE.
+    pv_subrc = 0.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_zca_stpo</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_zca_stpo .
+<font color ="#0000FF">*bom header 조회</font>
+  SELECT SINGLE
+     a~stlnr
+     a~werks
+     a~matnr
+     a~bmeng
+     a~datuv
+     a~vaild_to
+     a~loekz
+     b~meins
+    FROM zca_stko AS a
+    INNER JOIN zca_mara AS b
+     ON a~matnr EQ b~matnr
+    INTO CORRESPONDING FIELDS OF gs_stko
+    WHERE a~matnr EQ zca_mara-matnr
+    AND a~werks EQ zca_t001W-werks
+    AND a~loekz EQ space.
+
+  SELECT SINGLE
+    pname
+    FROM zca_t001w
+    INTO zca_t001w-pname
+    WHERE werks EQ gs_stko-werks.
+
+  IF sy-subrc EQ 0.
+<font color ="#0000FF">*    bom header 입력필드에 조회해온 값을 넣어준다.</font>
+    zca_stko-bmeng    = gs_stko-bmeng.
+    zca_stko-bmein    = gs_stko-meins.
+    zca_stko-datuv    = gs_stko-datuv.
+    zca_stko-vaild_to = gs_stko-vaild_to.
+  ENDIF.
+
+<font color ="#0000FF">*bom item 조회</font>
+  SELECT
+    a~stlnr
+    a~posnr
+    a~datuv
+    a~vaild_to
+    a~idnrk
+    a~menge
+    b~meins
+    a~loekz
+    c~maktx
+   FROM zca_stpo AS a
+   INNER JOIN zca_mara AS b
+      ON a~idnrk EQ b~matnr
+   INNER JOIN zca_makt AS c
+      ON b~matnr EQ c~matnr
+   INTO CORRESPONDING FIELDS OF TABLE gt_display
+   WHERE a~stlnr EQ gs_stko-stlnr
+      AND c~spras EQ sy-langu
+      AND a~loekz EQ space .
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form field_catalog_zcapp020</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM field_catalog_zcapp020 .
+  REFRESH gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'STLNR'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'STLNR'.
+  gs_fieldcat-outputlen = 10.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'POSNR'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'POSNR'.
+  gs_fieldcat-outputlen = 10.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'IDNRK'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'IDNRK'.
+  gs_fieldcat-coltext = '투입자재'.
+<font color ="#0000FF">*  gs_fieldcat-f4availabl = 'ZCA_SH_MATNR2'.</font>
+  gs_fieldcat-outputlen = 10.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-ref_table = 'ZCA_MAKT'.
+  gs_fieldcat-ref_field = 'MAKTX'.
+  gs_fieldcat-coltext = '자재명'.
+  gs_fieldcat-outputlen = 15.
+  gs_fieldcat-f4availabl = 'ZCA_SH_MATNR3'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MENGE'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'MENGE'.
+  gs_fieldcat-coltext = '수량'.
+  gs_fieldcat-outputlen = 5.
+  gs_fieldcat-edit = abap_on.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'MEINS'.
+  gs_fieldcat-coltext = '단위'.
+  gs_fieldcat-outputlen = 5.
+<font color ="#0000FF">*  gs_fieldcat-edit = abap_on.</font>
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'DATUV'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'DATUV'.
+  gs_fieldcat-coltext = '유효 시작일'.
+  gs_fieldcat-outputlen = 8.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'VAILD_TO'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'VAILD_TO'.
+  gs_fieldcat-coltext = '유효 종료일'.
+  gs_fieldcat-outputlen = 8.
+  gs_fieldcat-edit = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_for_bomid</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_for_bomid .
+<font color ="#0000FF">*  DATA lv_stlnr TYPE zca_stko-stlnr.</font>
+
+  SELECT SINGLE
+    stlnr
+    FROM zca_stko
+    INTO gv_stlnr
+    WHERE matnr EQ zca_mara-matnr
+      AND loekz NE abap_on.       "삭제된 BOM은 제외
+
+  IF sy-subrc EQ 0.
+    MESSAGE '이미 생성한 BOM이 있습니다' TYPE 'S' DISPLAY LIKE 'E'.
+    gv_lock = 'X'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form updata_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM updata_data .
+  DATA lv_answer TYPE c.
+  DATA : lv_valid TYPE c.
+
+  "alv에서 변경된 값 확인
+  CALL METHOD go_alv_grid-&gt;check_changed_data
+    IMPORTING
+      e_valid = lv_valid.
+
+  PERFORM pop_up_message CHANGING lv_answer.
+
+  IF lv_answer EQ '1'.
+    PERFORM update_data_bom.
+  ELSE.
+    MESSAGE '저장을 취소하였습니다' TYPE 'S' DISPLAY LIKE 'W'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form lock_screen_field_zcapp011</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM lock_screen_field_zcapp011 .
+<font color ="#0000FF">*  IF gv_lock EQ 'X' .</font>
+<font color ="#0000FF">*  헤더는 변경 x</font>
+  LOOP AT SCREEN.
+    CASE screen-name.
+      WHEN 'ZCA_STKO-BMEIN'.
+        screen-input = 0.
+        MODIFY SCREEN.
+    ENDCASE.
+  ENDLOOP.
+<font color ="#0000FF">*  ENDIF.</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form update_data_bom</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM update_data_bom .
+  DATA : BEGIN OF ls_er,
+           erdat TYPE zca_stpo-erdat,
+           erzet TYPE zca_stpo-erzet,
+           ernam TYPE zca_stpo-ernam,
+         END OF ls_er.
+
+  DATA: ls_stpo TYPE zca_stpo.  " DB 테이블과 같은 구조 선언
+
+<font color ="#0000FF">* bom header 업데이트</font>
+  UPDATE zca_stko SET
+                      matnr    = zca_mara-matnr
+                      werks    = zca_t001w-werks
+                      bmeng    = zca_stko-bmeng
+                      bmein    = zca_stko-bmein
+                      datuv    = zca_stko-datuv
+                      vaild_to = zca_stko-vaild_to
+                      loekz    = zca_stko-loekz
+                      aenam    = sy-uname
+                      aedat    = sy-datum
+                      aezet    = sy-uzeit
+                    WHERE matnr EQ  zca_mara-matnr.
+
+  LOOP AT gt_display INTO gs_display.
+
+    CLEAR: ls_stpo,
+           ls_er.
+
+<font color ="#0000FF">* bom item 업데이트</font>
+    MOVE-CORRESPONDING gs_display TO ls_stpo.
+
+<font color ="#0000FF">* 기존 생성정보를 가져온다.</font>
+    SELECT SINGLE
+      ernam
+      erdat
+      erzet
+      FROM zca_stpo
+      INTO CORRESPONDING FIELDS OF ls_er
+      WHERE stlnr EQ gs_display-stlnr
+        AND posnr EQ gs_display-posnr.
+
+    " 생성자 정보 설정
+    ls_stpo-erdat = ls_er-erdat.
+    ls_stpo-erzet = ls_er-erzet.
+    ls_stpo-ernam = ls_er-ernam.
+    "변경자 정보 설정
+    ls_stpo-aedat = sy-datum.
+    ls_stpo-aezet = sy-uzeit.
+    ls_stpo-aenam = sy-uname.
+
+    MODIFY zca_stpo FROM ls_stpo.  "(insert / update 변경)
+
+  ENDLOOP.
+
+  IF sy-subrc EQ 0.
+    COMMIT WORK.
+    MESSAGE '성공적으로 저장되었습니다' TYPE 'S'.
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE '데이터 저장에 실패하였습니다' TYPE 'E'.
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form init_alv_line</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM init_alv_line .
+<font color ="#0000FF">*  BOM Item 생성 시 , 초기 10라인 생성</font>
+  CASE sy-tcode.
+    WHEN 'ZCAPP010'.
+
+      DO 10 TIMES.
+        INSERT gs_display INTO gt_display INDEX 1.
+      ENDDO.
+
+  ENDCASE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_bom</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_bom .
+  DATA lt_matnr TYPE RANGE OF zca_mara.
+  DATA lt_werks TYPE RANGE OF zca_t001w.
+  DATA ls_range LIKE LINE OF lt_matnr.
+  DATA ls_range2 LIKE LINE OF lt_werks.
+
+  CLEAR ls_range.
+  ls_range-sign = 'I'.
+  ls_range-option = 'EQ'.
+  ls_range-low =  zca_mara-matnr.
+  APPEND ls_range TO lt_matnr.
+
+  CLEAR ls_range2.
+  ls_range2-sign = 'I'.
+  ls_range2-option = 'EQ'.
+  ls_range2-low = zca_t001w-werks.
+  APPEND ls_range2  TO lt_werks.
+
+  " SUBMIT 실행 (AND RETURN 붙이면 제어가 돌아옴)
+  SUBMIT zca_pp020
+    WITH s_matnr IN lt_matnr
+    WITH s_werks IN lt_werks
+    AND RETURN.
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

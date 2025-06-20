@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP080_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP080_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP080_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE STATUS_0100 OUTPUT.
+ SET PF-STATUS '0100'.
+ SET TITLEBAR  '0100' WITH GV_TITLE_SCR100.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CLEAR_OK_CODE OUTPUT.
+  CLEAR OK_CODE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE INIT_ALV_0100 OUTPUT.
+
+  IF GO_CONTAINER1 IS INITIAL.
+
+<font color ="#0000FF">*   Container, Grid 객체 생성</font>
+    PERFORM CREATE_SCREEN_OBJ USING GO_CONTAINER1
+                                    GO_ALV_GRID1
+                                    'CCON1'.
+    PERFORM CREATE_SCREEN_OBJ USING GO_CONTAINER2
+                                    GO_ALV_GRID2
+                                    'CCON2'.
+<font color ="#0000FF">*   Layout 설정</font>
+    PERFORM SET_LAYOUT_CCON1.
+
+
+<font color ="#0000FF">*   Field Catalog 설정</font>
+    PERFORM SET_FIELD_CATALOG_CCON1.
+<font color ="#0000FF">*   Variant 설정</font>
+    PERFORM SET_VARIANT USING 110.
+<font color ="#0000FF">*   ALV 출력</font>
+    PERFORM SHOW_ALV USING GO_ALV_GRID1
+                           GS_LAYO1
+                           GT_FCAT
+                           GT_DISPLAY_PPT030.
+
+    PERFORM SET_FIELD_CATALOG_CCON2.
+    PERFORM SET_VARIANT USING 120.
+<font color ="#0000FF">*   ALV 출력</font>
+    PERFORM SHOW_ALV USING GO_ALV_GRID2
+                           GS_LAYO1
+                           GT_FCAT
+                           GT_DISPLAY_EBAN.
+
+
+  ELSE.
+
+    PERFORM REFRESH_GRID.
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_DYNNR_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE FILL_DYNNR_0110 OUTPUT.
+
+  CASE TABSTRIP-ACTIVETAB.
+    WHEN 'TAB1'.
+      DYNNR = '0110'.
+    WHEN 'TAB2'.
+      DYNNR = '0120'.
+    WHEN OTHERS.
+      TABSTRIP-ACTIVETAB = 'TAB1'.
+      DYNNR = '0110'.
+  ENDCASE.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

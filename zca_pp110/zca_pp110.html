@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP110</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP110</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [PP] 생산 공정 관리</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_PP110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& 생산 공정 관리 프로그램</font>
+<font color ="#0000FF">*& 개발자 : 김영은</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zca_pp110 MESSAGE-ID zca_msg.
+include <a href ="zca_pp110_top.html">zca_pp110_top</a>.
+include <a href ="zca_pp110_scr.html">zca_pp110_scr</a>.
+include <a href ="zca_pp110_cls.html">zca_pp110_cls</a>.
+include <a href ="zca_pp110_pbo.html">zca_pp110_pbo</a>.
+include <a href ="zca_pp110_pai.html">zca_pp110_pai</a>.
+include <a href ="zca_pp110_f01.html">zca_pp110_f01</a>.
+
+INITIALIZATION.
+"Selection screen [생산오더 생성] 버튼 생성
+  PERFORM create_app_toolbar.
+
+
+AT SELECTION-SCREEN.
+  "[생산오더 생성] 버튼 기능 구현 : 생산오더 생성 프로그램 호출
+  PERFORM fc_app_toolbar.
+
+
+START-OF-SELECTION.
+  PERFORM select_data.
+  PERFORM modify_data.
+  PERFORM display_data.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 0100 --&gt; [PP] 생산 공정 관리</font>
+<font color ="#0000FF">* 0110 --&gt; 플랜트 Info</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 001 검색조건</font>
+<font color ="#0000FF">* L01 생산시작</font>
+<font color ="#0000FF">* L02 생산이 시작됩니다. [공정 시작] 버튼을 눌러 공정을 시작해주십시오.</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* P_WERKS D       .</font>
+<font color ="#0000FF">* S_MATNR D       .</font>
+<font color ="#0000FF">* S_PSDAY D       .</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*100   검색조건에 해당되는 데이터가 없습니다.</font>
+<font color ="#0000FF">*109   자재가 부족하여 생산할 수 없습니다</font>
+<font color ="#0000FF">*110   & 일 모든 생산이 완료된 상태입니다</font>
+<font color ="#0000FF">*111   반제품 공정 먼저 시작해주십시오</font>
+<font color ="#0000FF">*112   반제품 생산완료, 완제품 생산이 가능합니다</font>
+<font color ="#0000FF">*113   생산이 중단되었습니다</font>
+<font color ="#0000FF">*114   완제품 생산완료</font>
+<font color ="#0000FF">*115   아직 생산 중입니다. 생산 완료 후 실적입력 가능</font>
+<font color ="#0000FF">*116   생산 시작을 취소하였습니다</font>
+<font color ="#0000FF">*117   생산이 진행중 입니다</font>
+<font color ="#0000FF">*118   이미 생산이 완료되었습니다</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

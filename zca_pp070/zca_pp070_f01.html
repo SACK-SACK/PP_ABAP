@@ -1,0 +1,845 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP070_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP070_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP070_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_PPT010</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SELECT_PPT010 .
+<font color ="#0000FF">* 2주 이전의 생산계획부터 가져오는</font>
+
+  DATA LV_DATE TYPE SY-DATUM.
+  LV_DATE = SY-DATUM.
+<font color ="#0000FF">*  LV_DATE -= 14.</font>
+  LV_DATE -= 50.
+
+  SELECT PPT010~PLNUM   " 생산계획 ID
+         PPT010~PYEAR   " 계획 년도
+         PPT010~PMONTH  " 계획 월
+         PPT010~PWEEK   " 계획 주차
+         PPT010~PLWRK   " 플랜트 ID
+         T001W~PNAME    " 플랜트 명
+         PPT010~PSTTR   " 생산계획 시작일
+         PPT010~PEDTR   " 생산계획 종료일
+         PPT010~MRPID   " 최종 MRP ID
+    FROM ZCA_PPT010 AS PPT010 INNER JOIN ZCA_T001W AS T001W
+      ON PPT010~PLWRK EQ T001W~WERKS
+    INTO CORRESPONDING FIELDS OF TABLE GT_PPT010
+    WHERE PPT010~PPSTS EQ 'A'
+      AND PSTTR &gt;= LV_DATE
+    AND PLWRK EQ PA_PLANT .
+
+  LOOP AT GT_PPT010 INTO DATA(LS_PPT010).
+
+    IF LS_PPT010-MRPID IS NOT INITIAL. " MRP ID가 있으면
+      LS_PPT010-MRPPLG = '@5B@'. " GREEN LED
+    ELSE.
+      LS_PPT010-MRPPLG = '@5D@'. " YELLOW LED
+    ENDIF.
+
+    SELECT SINGLE AUFNR
+      FROM ZCA_AUFK
+      INTO @DATA(LV_PO_CHECK)
+      WHERE PLNUM EQ @LS_PPT010-PLNUM.
+
+    IF SY-SUBRC EQ 0. " 생산오더가 있으면
+      LS_PPT010-POPLG = '@5B@'.
+    ELSE.
+      LS_PPT010-POPLG = '@5D@'.
+    ENDIF.
+
+    SELECT SINGLE BANFN
+      FROM ZCA_EBAN
+      INTO @DATA(LV_PR_CHECK)
+      WHERE MRPID EQ @LS_PPT010-MRPID.
+
+    IF SY-SUBRC EQ 0. " 구매요청이 있으면
+      LS_PPT010-PRPLG = '@5B@'.
+    ELSE.
+
+      IF LS_PPT010-MRPPLG EQ '@5B@'.
+        LS_PPT010-PRPLG = '@5D@'.
+      ELSE.
+        LS_PPT010-PRPLG = '@5C@'.
+      ENDIF.
+
+    ENDIF.
+
+    MODIFY GT_PPT010 FROM LS_PPT010.
+
+  ENDLOOP.
+
+  SORT GT_PPT010 BY PLNUM DESCENDING.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_SPLIT_OBJECT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_SPLIT_OBJECT .
+
+  CREATE OBJECT GO_DOCK_CONT
+    EXPORTING
+      REPID     = SY-REPID                                  " Report to Which This Docking Control is Linked
+      DYNNR     = SY-DYNNR                                  " Screen to Which This Docking Control is Linked
+      SIDE      = CL_GUI_DOCKING_CONTAINER=&gt;DOCK_AT_LEFT    " Side to Which Control is Docked
+      EXTENSION = 1050.                                     " Control Extension
+
+  CREATE OBJECT GO_SPLITTER
+    EXPORTING
+      PARENT  = GO_DOCK_CONT
+      ROWS    = 2                 " 몇 개의 가로(행) 분할 할 것인지 "
+      COLUMNS = 1.             " 몇 개의 세로(열) 분할 할 것인지 "
+
+  CALL METHOD GO_SPLITTER-&gt;GET_CONTAINER
+    EXPORTING
+      ROW       = 1                     " Row
+      COLUMN    = 1                     " Column
+    RECEIVING
+      CONTAINER = GO_SPLIT_CONTAINER01. " Container
+
+  CALL METHOD GO_SPLITTER-&gt;GET_CONTAINER
+    EXPORTING
+      ROW       = 2                     " Row
+      COLUMN    = 1                     " Column
+    RECEIVING
+      CONTAINER = GO_SPLIT_CONTAINER02. " Container
+
+  CREATE OBJECT GO_SPLIT_GRID01
+    EXPORTING
+      I_PARENT = GO_SPLIT_CONTAINER01.
+
+  CREATE OBJECT GO_SPLIT_GRID02
+    EXPORTING
+      I_PARENT = GO_SPLIT_CONTAINER02.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_TABLE_FOR_FIRST_DISPLAY</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_TABLE_FOR_FIRST_DISPLAY  USING    PO_SPLIT_GRID TYPE REF TO CL_GUI_ALV_GRID
+                                           PT_DISPLAY TYPE STANDARD TABLE.
+
+  CALL METHOD PO_SPLIT_GRID-&gt;SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+      IS_LAYOUT       = GS_LAYO        " Layout
+    CHANGING
+      IT_OUTTAB       = PT_DISPLAY     " Output Table
+      IT_FIELDCATALOG = GT_FCAT.       " Field Catalog
+
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FCAT_FOR_SPLIT_GRID01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FCAT_FOR_SPLIT_GRID01 .
+
+  CLEAR GS_FCAT.
+  REFRESH GT_FCAT.
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PLNUM'.
+  GS_FCAT-FIELDNAME = 'PLNUM'.
+  GS_FCAT-HOTSPOT   = 'X'.
+  GS_FCAT-KEY       = 'X'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산계획 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PYEAR'.
+  GS_FCAT-FIELDNAME = 'PYEAR'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 계획 년도
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PMONTH'.
+  GS_FCAT-FIELDNAME = 'PMONTH'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 계획 월
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PWEEK'.
+  GS_FCAT-FIELDNAME = 'PWEEK'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 계획 주차
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PLWRK'.
+  GS_FCAT-FIELDNAME = 'PLWRK'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 플랜트 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_T001W'.
+  GS_FCAT-REF_FIELD = 'PNAME'.
+  GS_FCAT-FIELDNAME = 'PNAME'.
+  GS_FCAT-OUTPUTLEN = '14'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 플랜트 명
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PSTTR'.
+  GS_FCAT-FIELDNAME = 'PSTTR'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산계획 시작일
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PEDTR'.
+  GS_FCAT-FIELDNAME = 'PEDTR'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산계획 종료일
+
+  GS_FCAT-FIELDNAME = 'MRPPLG'.
+  GS_FCAT-COLTEXT   = 'MRP 실행 여부'.
+  GS_FCAT-ICON      = 'X'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " MRP 확인 플래그
+
+  GS_FCAT-FIELDNAME = 'POPLG'.
+  GS_FCAT-COLTEXT   = '오더 전환 여부'.
+  GS_FCAT-ICON      = 'X'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산오더 확인 플래그
+
+  GS_FCAT-FIELDNAME = 'PRPLG'.
+  GS_FCAT-COLTEXT   = '구매 요청 여부'.
+  GS_FCAT-ICON      = 'X'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매요청 확인 플래그
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FCAT_FOR_SPLIT_GRID02</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FCAT_FOR_SPLIT_GRID02 .
+  CLEAR GS_FCAT.
+  REFRESH GT_FCAT.
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT020'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-KEY       = 'X'.
+  GS_FCAT-OUTPUTLEN = '17'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재코드
+
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-OUTPUTLEN = '17'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재명
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT020'.
+  GS_FCAT-REF_FIELD = 'GSMNG'.
+  GS_FCAT-FIELDNAME = 'GSMNG'.
+  GS_FCAT-OUTPUTLEN = '17'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 계획 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT020'.
+  GS_FCAT-REF_FIELD = 'MEINS'.
+  GS_FCAT-FIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '17'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 수량 단위
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYO_FOR_SPLIT_GRID01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYO_FOR_SPLIT_GRID01 .
+
+  CLEAR GS_LAYO.
+  GS_LAYO-SEL_MODE = 'B'.  " 단일행 선택
+  GS_LAYO-GRID_TITLE = '생산계획 Header'.
+  GS_LAYO-CWIDTH_OPT = 'A'.      " 열 넓이 최적화
+  GS_LAYO-ZEBRA      = ABAP_ON.           "layout 줄무늬 처리
+  GS_LAYO-INFO_FNAME = 'ROW_COLOR'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form HANDLE_HOTSPOT_CLICK</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM HANDLE_HOTSPOT_CLICK  USING    PS_ROW_ID    TYPE LVC_S_ROW
+                                    PS_COLUMN_ID TYPE LVC_S_COL
+                                    PV_SENDER.
+
+  CLEAR GS_PPT010.
+  REFRESH: GT_PPT020, GT_MRP_DISPLAY.
+
+  CASE PV_SENDER. "alv 객체 별로 이벤트가 발생할 객체 지정
+    WHEN GO_SPLIT_GRID01.
+
+      CASE PS_COLUMN_ID-FIELDNAME.
+        WHEN 'PLNUM'.
+
+          READ TABLE GT_PPT010 INTO GS_PPT010 INDEX PS_ROW_ID-INDEX.
+
+<font color ="#0000FF">* 생산계획 Item 가져오기.</font>
+          IF SY-SUBRC EQ 0.
+
+            SELECT *
+              FROM ZCA_PPT020 AS PPT020 LEFT OUTER JOIN ZCA_MAKT AS MAKT
+                ON PPT020~MATNR EQ MAKT~MATNR AND MAKT~SPRAS EQ '3'
+              INTO CORRESPONDING FIELDS OF TABLE GT_PPT020
+              WHERE PLNUM EQ GS_PPT010-PLNUM.
+
+<font color ="#0000FF">* MRP 정보 가져오기</font>
+
+            SELECT *
+              FROM ZCA_PPT030
+              INTO CORRESPONDING FIELDS OF TABLE GT_MRP_DISPLAY
+              WHERE PLNUM EQ GS_PPT010-PLNUM.
+
+            PERFORM SET_MRP_DISPLAY_MAKTX.
+
+          ENDIF.
+
+          PERFORM SET_LAYO_FOR_SPLIT_GRID02 USING GS_PPT010-PLNUM.
+
+          CALL METHOD GO_SPLIT_GRID02-&gt;SET_FRONTEND_LAYOUT
+            EXPORTING
+              IS_LAYOUT = GS_LAYO.
+          CALL METHOD GO_SPLIT_GRID02-&gt;REFRESH_TABLE_DISPLAY.
+          CALL METHOD GO_ALV_GRID-&gt;REFRESH_TABLE_DISPLAY.
+          LEAVE SCREEN.
+      ENDCASE.
+
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_CONN_OBJECT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_CONN_OBJECT .
+
+  CREATE OBJECT GO_CONTAINER
+    EXPORTING
+      CONTAINER_NAME = 'CCON_MRP'.                 " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT GO_ALV_GRID
+    EXPORTING
+      I_PARENT = GO_CONTAINER.                 " Parent Container
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_HANDLER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_HANDLER .
+
+  CREATE OBJECT GO_EVENT_HANDLER.
+  SET HANDLER GO_EVENT_HANDLER-&gt;HANDLE_HOTSPOT_CLICK FOR GO_SPLIT_GRID01.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYO_FOR_SPLIT_GRID02</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYO_FOR_SPLIT_GRID02 USING PV_INFO.
+
+  CLEAR GS_LAYO.
+  GS_LAYO-SEL_MODE = 'D'.
+  GS_LAYO-GRID_TITLE = |{ PV_INFO } 생산계획 세부정보|.
+  GS_LAYO-ZEBRA      = ABAP_ON.           "layout 줄무늬 처리
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CONFIRM_MRP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CONFIRM_MRP  CHANGING PV_ANSWER.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      TITLEBAR       = '자재소요계획 생성'(T01)
+      TEXT_QUESTION  = '자재소요계획을 생성하시겠습니까?'(T02)
+      TEXT_BUTTON_1  = '예'(T03)
+      TEXT_BUTTON_2  = '아니오'(T04)
+      DEFAULT_BUTTON = '1'
+      DISPLAY_CANCEL_BUTTON = ABAP_OFF
+    IMPORTING
+      ANSWER         = PV_ANSWER.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_MRP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_MRP  USING    PS_PPT010 LIKE GS_PPT010.
+  REFRESH GT_COLLECT_DATA.
+
+  DATA: LT_PPT020 TYPE TABLE OF ZCA_PPT020,
+        LV_MRPID  TYPE ZCA_PPT030-MRPID,
+        LV_STOCK  TYPE ZCA_PPT030-STOCK,
+        LV_DAY    TYPE SCAL-INDICATOR,
+        LV_CALC_EISBE TYPE ZCA_PPT030-STOCK VALUE 0.
+
+
+<font color ="#0000FF">* 원자재 소요량 구하기</font>
+  LOOP AT GT_PPT020 INTO GS_PPT020.
+    PERFORM CALC_QTY.
+  ENDLOOP.
+  SORT GT_COLLECT_DATA BY MATNR.
+
+  SELECT
+    FROM ZCA_PPV020
+    FIELDS MATNR, " 자재코드
+           LABST, " 가용수량
+           EISBE, " 안전재고
+           MEINS  " 자재 수량 단위
+    INTO TABLE @DATA(LT_PPV020).
+
+<font color ="#0000FF">*   MRP ID</font>
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      NR_RANGE_NR = 'MR'               " Number range number
+      OBJECT      = 'ZCA_MRPID'        " Name of number range object
+    IMPORTING
+      NUMBER      = LV_MRPID.                " free number
+  LV_MRPID = |MR{ LV_MRPID+2(6) }|.
+
+  LOOP AT GT_COLLECT_DATA INTO GS_COLLECT_DATA.
+
+<font color ="#0000FF">* 최종 MRP ID</font>
+    " MRPID
+<font color ="#0000FF">* 생산계획 ID</font>
+    " GS_PPT010-PLNUM
+<font color ="#0000FF">* 자재코드</font>
+    " GS_COLLECT_DATA-MATNR
+<font color ="#0000FF">* 현재 가용 수량</font>
+    " READ TABLE LT_PPV020 INTO @DATA(LS_PPV020) WITH KEY MATNR = GS_COLLECT_DATA-MATNR.
+    " DATA(현재가용수량) = LS_PPV020-LABST - LS_PPV020-EISBE.
+<font color ="#0000FF">* 소요 확정 수량</font>
+    " IF PS_PPT010 IS NOT INITIAL
+    "   SELECT USEQT FROM ZCA_PPT030 WHERE PLNUM EQ PS_PPT020-PLNUM AND MATNR EQ PS_PPT020-MATNR
+<font color ="#0000FF">* 소요 계획 수량</font>
+    " GS_COLLECT_DATA-GSMNG
+<font color ="#0000FF">* 구매요청 수량</font>
+    " ( 현재 가용수량 - 소요 확정수량 ) - 소요 계획수량
+<font color ="#0000FF">* 자재 수량 단위</font>
+    " LS_PPV020-MEINS
+<font color ="#0000FF">* MRP 실행일자</font>
+    " SY-DATUM
+    READ TABLE LT_PPV020 INTO DATA(LS_PPV020) WITH KEY MATNR = GS_COLLECT_DATA-MATNR.
+    LV_STOCK = LS_PPV020-LABST - LS_PPV020-EISBE.
+    IF LV_STOCK &lt; 0.
+      LV_CALC_EISBE = ABS( LV_STOCK ).
+      LV_STOCK = 0.
+    ENDIF.
+    DATA LV_RESQT TYPE ZCA_PPT030-USEQT.
+
+    IF PS_PPT010 IS NOT INITIAL. " 이전 생산계획이 있다면
+
+      SELECT SINGLE USEQT
+        FROM ZCA_PPT030
+        INTO @DATA(LV_CALC_USEQT)
+        WHERE MRPID EQ @PS_PPT010-MRPID
+          AND MATNR EQ @LS_PPV020-MATNR.
+
+      SELECT PSDAY, PHAS1
+        FROM ZCA_AUFK
+        WHERE PLNUM EQ @PS_PPT010-PLNUM
+        GROUP BY PSDAY, PHAS1
+        HAVING PHAS1 EQ @ABAP_ON
+        INTO TABLE @DATA(LT_COMPLETE_ORDER).
+
+      DATA(LV_COMPLETE_ORDER) = LINES( LT_COMPLETE_ORDER ).
+
+      LV_CALC_USEQT = ( LV_CALC_USEQT / 7 ) * ( 7 - LV_COMPLETE_ORDER ).
+
+      IF LS_PPV020-LABST &lt; LV_CALC_USEQT.
+        MESSAGE W166. " 이전 구매요청에 대한 자재조달이 완료되지 않아, 자재소요계획을 생성할 수 없습니다.
+        RETURN.
+      ELSE.
+        LV_STOCK -= LV_CALC_USEQT.
+      ENDIF.
+
+    ENDIF.
+
+    IF LV_STOCK &lt; GS_COLLECT_DATA-GSMNG.
+      LV_RESQT = GS_COLLECT_DATA-GSMNG - LV_STOCK.
+    ELSE.
+      LV_RESQT = 0.
+    ENDIF.
+
+
+    GS_PPT030 = VALUE #(
+      MRPID = LV_MRPID
+      PLNUM = GS_PPT010-PLNUM
+      MATNR = GS_COLLECT_DATA-MATNR
+      STOCK = LV_STOCK
+      PLNQT = LV_CALC_USEQT
+      USEQT = GS_COLLECT_DATA-GSMNG
+      RESQT = LV_RESQT + LV_CALC_EISBE
+      MEINS = LS_PPV020-MEINS
+      MRPDT = SY-DATUM
+      ERNAM = SY-UNAME
+      ERDAT = SY-DATUM
+      ERZET = SY-UZEIT
+    ).
+
+    APPEND GS_PPT030 TO GT_PPT030.
+
+  ENDLOOP.
+
+  MOVE-CORRESPONDING GT_PPT030 TO GT_MRP_DISPLAY.
+
+  COMMIT WORK.
+
+  INSERT ZCA_PPT030 FROM TABLE GT_PPT030.
+
+  IF SY-SUBRC NE 0.
+    MESSAGE E167. " 데이터 생성 중 오류가 발생하였습니다.
+
+    REFRESH: GT_MRP_DISPLAY.
+    CLEAR GS_MRP_DISPLAY.
+
+    ROLLBACK WORK.
+    RETURN.
+  ENDIF.
+
+  UPDATE ZCA_PPT010 SET MRPID = LV_MRPID WHERE PLNUM EQ GS_PPT010-PLNUM.
+  IF SY-SUBRC NE 0.
+    MESSAGE E167. " 데이터 생성 중 오류가 발생하였습니다.
+
+    REFRESH: GT_MRP_DISPLAY.
+    CLEAR GS_MRP_DISPLAY.
+
+    ROLLBACK WORK.
+    RETURN.
+  ENDIF.
+
+  COMMIT WORK.
+
+  " 자재명 가져오기
+  PERFORM SET_MRP_DISPLAY_MAKTX.
+
+  " MRP 플래그 Green LED로 변경
+  GS_PPT010-MRPID  = LV_MRPID.
+  GS_PPT010-MRPPLG = '@5B@'.
+
+  READ TABLE GT_PPT010 WITH KEY PLNUM = GS_PPT010-PLNUM TRANSPORTING NO FIELDS.
+  MODIFY GT_PPT010 FROM GS_PPT010 INDEX SY-TABIX TRANSPORTING MRPPLG.
+
+  MESSAGE S168 WITH GS_PPT010-PLNUM. " 생산계획ID: & 에 대한 자재소요계획이 생성되었습니다.
+  REFRESH GT_PPT010.
+  PERFORM SELECT_PPT010.
+
+  CLEAR: GS_PPT030, GS_PPT020, LV_RESQT.
+  REFRESH GT_PPT030.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FCAT_FOR_MRP_GRID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FCAT_FOR_MRP_GRID .
+  CLEAR GS_FCAT.
+  REFRESH GT_FCAT.
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-KEY       = 'X'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재코드
+
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-OUTPUTLEN = '8'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재명
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'STOCK'.
+  GS_FCAT-FIELDNAME = 'STOCK'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 현재 가용 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'PLNQT'.
+  GS_FCAT-FIELDNAME = 'PLNQT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 소요 확정 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'USEQT'.
+  GS_FCAT-FIELDNAME = 'USEQT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 소요 계획 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'RESQT'.
+  GS_FCAT-FIELDNAME = 'RESQT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매요청 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'MEINS'.
+  GS_FCAT-FIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '5'.
+  GS_FCAT-COLTEXT   = '단위'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재 수량 단위
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'BANFN'.
+  GS_FCAT-FIELDNAME = 'BANFN'.
+  GS_FCAT-OUTPUTLEN = '9'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매요청 코드
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYO_FOR_MRP_GRID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYO_FOR_MRP_GRID  USING PV_INFO.
+
+  CLEAR GS_LAYO.
+  GS_LAYO-SEL_MODE = 'D'.
+  GS_LAYO-GRID_TITLE = |{ PV_INFO } 자재소요계획 세부정보|.
+  GS_LAYO-ZEBRA      = ABAP_ON.           "layout 줄무늬 처리
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CALC_QTY</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CALC_QTY.
+  DATA: LT_FUNCTION_DATA TYPE ZCA_PPT040,
+        LS_FUNCTION_DATA TYPE ZCA_PPS030.
+
+  call function <a href ="zca_pp_mrp/zca_pp_mrp.html">'ZCA_PP_MRP'</a>
+    EXPORTING
+      EV_MATNR  = GS_PPT020-MATNR  " 자재코드
+      EV_GSMNG  = GS_PPT020-GSMNG  " 수량
+      EV_FLAG   = 'MRP'
+    IMPORTING
+      ET_RESULT = LT_FUNCTION_DATA.      " 자재명, 수량, 단위 Return Type : ZCA_PPT040
+
+  LOOP AT LT_FUNCTION_DATA INTO LS_FUNCTION_DATA.
+    GS_COLLECT_DATA = VALUE #(
+      MATNR = LS_FUNCTION_DATA-MATNR
+      GSMNG = LS_FUNCTION_DATA-PDQTY
+    ).
+    COLLECT GS_COLLECT_DATA INTO GT_COLLECT_DATA.
+  ENDLOOP.
+
+  CLEAR: GS_COLLECT_DATA,
+         LS_FUNCTION_DATA.
+  REFRESH LT_FUNCTION_DATA.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_MRP_DISPLAY_MAKTX</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_MRP_DISPLAY_MAKTX .
+
+  LOOP AT GT_MRP_DISPLAY ASSIGNING FIELD-SYMBOL(&lt;FS_MRP_DISPLAY&gt;).
+
+    SELECT SINGLE MAKTX
+      FROM ZCA_MAKT
+      INTO @DATA(LV_MAKTX)
+      WHERE MATNR EQ @&lt;FS_MRP_DISPLAY&gt;-MATNR
+        AND SPRAS EQ '3'.
+
+    &lt;FS_MRP_DISPLAY&gt;-MAKTX = LV_MAKTX.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form VALUE_CHECK_FOR_PRBTN</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM VALUE_CHECK_FOR_PRBTN .
+  DATA LV_ANSWER TYPE C.
+
+  IF GS_PPT010-PLNUM IS INITIAL.
+    MESSAGE S153 DISPLAY LIKE 'W'. " 생산계획 번호를 입력해주세요.
+
+  ELSEIF GS_PPT010-MRPID IS INITIAL.
+    MESSAGE S169 DISPLAY LIKE 'W'. " 자재소요계획을 생성하지 않았습니다!
+
+  ELSEIF GS_PPT010-PRPLG EQ '@5B@'.
+    MESSAGE S170. " 이미 구매요청이 실행되었거나, 구매요청 할 자재가 없습니다!
+
+  ELSE.
+    SELECT *
+      FROM ZCA_PPT030
+      INTO TABLE GT_PPT030
+      WHERE MRPID EQ GS_PPT010-MRPID AND RESQT &gt; 0.
+
+    IF LINES( GT_PPT030 ) EQ 0.
+      MESSAGE S171 DISPLAY LIKE 'I'. " 구매요청 할 자재가 없습니다.
+      REFRESH GT_PPT030.
+      RETURN.
+    ENDIF.
+
+    PERFORM CONFIRM_PR CHANGING LV_ANSWER.
+
+    CASE LV_ANSWER.
+      WHEN 1.
+        PERFORM CREATE_PR. " 구매요청 생성
+
+      WHEN 2.
+        MESSAGE I156. " 구매요청을 취소하였습니다.
+        REFRESH GT_PPT030.
+    ENDCASE.
+
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_PR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_PR .
+  DATA: LT_EBAN  TYPE TABLE OF ZCA_EBAN,
+        LS_EBAN  TYPE          ZCA_EBAN,
+        LV_BANFN TYPE ZCA_EBAN-BANFN.
+
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      NR_RANGE_NR = '01'
+      OBJECT      = 'ZCA_BANFN'
+    IMPORTING
+      NUMBER      = LV_BANFN.
+
+  LV_BANFN = |PR{ LV_BANFN }|.
+
+  LOOP AT GT_PPT030 ASSIGNING FIELD-SYMBOL(&lt;FS_PPT030&gt;).
+
+    LS_EBAN = VALUE #(
+<font color ="#0000FF">*   구매요청 코드</font>
+      BANFN = LV_BANFN
+<font color ="#0000FF">*   자재코드</font>
+      MATNR = &lt;FS_PPT030&gt;-MATNR
+<font color ="#0000FF">*   최종 MRP ID</font>
+      MRPID = &lt;FS_PPT030&gt;-MRPID
+<font color ="#0000FF">*   플랜트 ID</font>
+      WERKS = 'P001'
+<font color ="#0000FF">*   구매 요청량</font>
+      PRAMT = &lt;FS_PPT030&gt;-RESQT
+<font color ="#0000FF">*   단위</font>
+      MEINS = &lt;FS_PPT030&gt;-MEINS
+<font color ="#0000FF">*   단위</font>
+      MEINH = &lt;FS_PPT030&gt;-MEINS
+<font color ="#0000FF">*   구매요청 일자</font>
+      BADAT = SY-DATUM
+      BANPR = 'W'
+
+      ERNAM = SY-UNAME
+      ERDAT = SY-DATUM
+      ERZET = SY-UZEIT
+    ).
+
+    APPEND LS_EBAN TO LT_EBAN.
+
+  ENDLOOP.
+
+  COMMIT WORK.
+
+  INSERT ZCA_EBAN FROM TABLE LT_EBAN.
+
+  IF SY-SUBRC NE 0.
+    MESSAGE E167. " 데이터 생성 중 오류가 발생하였습니다.
+    ROLLBACK WORK.
+  ENDIF.
+
+  LOOP AT GT_PPT030 ASSIGNING FIELD-SYMBOL(&lt;FS_CHANGE_BANFN&gt;).
+    &lt;FS_CHANGE_BANFN&gt;-BANFN = LV_BANFN.
+  ENDLOOP.
+  MODIFY ZCA_PPT030 FROM TABLE GT_PPT030.
+
+  IF SY-SUBRC NE 0.
+    MESSAGE E167. " 데이터 생성 중 오류가 발생하였습니다.
+    ROLLBACK WORK.
+  ENDIF.
+
+  COMMIT WORK.
+
+  MESSAGE S172. " 구매요청이 완료되었습니다.
+
+  GS_PPT010-PRPLG = '@5B@'.
+  READ TABLE GT_PPT010 WITH KEY PLNUM = GS_PPT010-PLNUM TRANSPORTING NO FIELDS.
+  MODIFY GT_PPT010 FROM GS_PPT010 INDEX SY-TABIX.
+
+
+  LOOP AT GT_MRP_DISPLAY ASSIGNING FIELD-SYMBOL(&lt;FS_MRP_DISPLAY&gt;).
+    READ TABLE GT_PPT030 WITH KEY MRPID = &lt;FS_MRP_DISPLAY&gt;-MRPID
+                                  PLNUM = &lt;FS_MRP_DISPLAY&gt;-PLNUM
+                                  MATNR = &lt;FS_MRP_DISPLAY&gt;-MATNR
+                                  TRANSPORTING NO FIELDS.
+
+    IF SY-SUBRC EQ 0.
+      &lt;FS_MRP_DISPLAY&gt;-BANFN = LV_BANFN.
+    ENDIF.
+  ENDLOOP.
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CONFIRM_PR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CONFIRM_PR  CHANGING PV_ANSWER.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      TITLEBAR       = '구매요청 생성'(T05)
+      TEXT_QUESTION  = '부족한 자재를 구매요청 하시겠습니까?'(T06)
+      TEXT_BUTTON_1  = '예'(T03)
+      TEXT_BUTTON_2  = '아니오'(T04)
+      DEFAULT_BUTTON = '1'
+      DISPLAY_CANCEL_BUTTON = ABAP_OFF
+    IMPORTING
+      ANSWER         = PV_ANSWER.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH_FOR_SPLIT_GRID01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM REFRESH_FOR_SPLIT_GRID01 .
+
+  DATA: L_SCROLL TYPE LVC_S_STBL.
+  L_SCROLL-ROW = 'X'.
+  L_SCROLL-COL = 'X'.
+  CALL METHOD GO_SPLIT_GRID01-&gt;REFRESH_TABLE_DISPLAY
+    EXPORTING
+      I_SOFT_REFRESH = ''
+      IS_STABLE      = L_SCROLL.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form INPUT_CHECK_PLANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM INPUT_CHECK_PLANT .
+
+  SELECT SINGLE PTYPE, PNAME
+    FROM ZCA_T001W
+    INTO @DATA(LS_CHECK)
+    WHERE WERKS EQ @PA_PLANT.
+
+  IF LS_CHECK-PTYPE NE 'PROD'.
+    MESSAGE E160. "생산공장을 선택해주세요.
+  ELSE.
+    GV_TITLE_SCR100 = |[PP][{ LS_CHECK-PNAME }-{ PA_PLANT }] 자재소요량 계산(MRP) 실행|.
+  ENDIF.
+
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_SCREEN100_TITLE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_SCREEN100_TITLE .
+  SELECT SINGLE PNAME
+      FROM ZCA_T001W
+      WHERE WERKS EQ @PA_PLANT
+      INTO @DATA(LV_PNAME).
+
+    GV_TITLE_SCR100 = |[PP][{ LV_PNAME }-{ PA_PLANT }] 자재소요량 계산(MRP) 실행|.
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

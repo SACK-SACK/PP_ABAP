@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP110_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP110_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP110_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP110_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES : zca_aufk,    "생산오더
+         zca_t001w,   "플랜트
+         sscrfields,  "selection screen
+         icon.
+
+DATA ok_code     TYPE sy-ucomm.
+DATA gv_ok       TYPE c.      "반제품 생산완료 플래그
+DATA gv_finish   TYPE c.      "생산시작일 전 제품 생산 완료 플래그
+DATA gv_unfinish TYPE c.      "생산 미완료 플래그
+
+<font color ="#0000FF">*생산오더 조회</font>
+DATA : BEGIN OF gs_aufk.
+         include structure <a href ="zca_ppv030/dictionary-zca_ppv030.html">zca_ppv030</a>.
+DATA : END OF gs_aufk.
+DATA gt_aufk LIKE TABLE OF gs_aufk.
+
+<font color ="#0000FF">*ZCA_MARD 테이블 조회 - 재고 확인</font>
+DATA : gs_mard TYPE zca_mard,
+       gt_mard TYPE TABLE OF zca_mard.
+
+<font color ="#0000FF">*공정 조회</font>
+DATA : gs_plpo TYPE zca_plpo,
+       gt_plpo TYPE TABLE OF zca_plpo.
+
+DATA : gs_matnr TYPE zca_pps030,
+       gt_matnr TYPE zca_ppt040.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*ALV</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*생산오더 alv</font>
+DATA : gs_display_100 TYPE zca_pps020,
+       gt_display_100 LIKE TABLE OF gs_display_100.
+
+<font color ="#0000FF">*반제품 공정 alv</font>
+DATA : BEGIN OF gs_display_200.
+         include structure <a href ="zca_pps040/dictionary-zca_pps040.html">zca_pps040</a>.
+DATA : END OF gs_display_200.
+DATA gt_display_200 LIKE TABLE OF gs_display_200.
+
+<font color ="#0000FF">*완제품 공정 alv</font>
+DATA : BEGIN OF gs_display_300.
+         include structure <a href ="zca_pps040/dictionary-zca_pps040.html">zca_pps040</a>.
+DATA : END OF gs_display_300.
+DATA gt_display_300 LIKE TABLE OF gs_display_300.
+
+<font color ="#0000FF">*ALV</font>
+DATA go_docking_container TYPE REF TO cl_gui_docking_container.
+DATA go_container_100 TYPE REF TO cl_gui_custom_container.
+DATA go_container_200 TYPE REF TO cl_gui_custom_container.
+DATA go_container_300 TYPE REF TO cl_gui_custom_container.
+DATA go_alv_grid_100  TYPE REF TO cl_gui_alv_grid.
+DATA go_alv_grid_200  TYPE REF TO cl_gui_alv_grid.
+DATA go_alv_grid_300  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA gs_layout  TYPE lvc_s_layo.
+DATA gs_variant TYPE disvariant.
+DATA gv_save    TYPE c.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA gt_fieldcat TYPE lvc_t_fcat.
+DATA gs_fieldcat TYPE lvc_s_fcat.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*screen</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*화면 변수</font>
+DATA dynnr TYPE sy-dynnr.
+
+<font color ="#0000FF">*Screen icon 필드 변수</font>
+DATA : BEGIN OF gs_icon,
+         02 TYPE icon_d,
+         03 TYPE icon_d,
+         05 TYPE icon_d,
+       END OF gs_icon.
+
+<font color ="#0000FF">*tabstrip 제어 변수</font>
+CONTROLS : tabstrip  TYPE TABSTRIP.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

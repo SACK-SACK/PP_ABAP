@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP050_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP050_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP050_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE EXIT_COMMAND_0100 INPUT.
+
+  CASE OK_CODE.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE USER_COMMAND_0100 INPUT.
+ DATA : LV_UCOMM TYPE SY-UCOMM.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* BACK : 뒤로가기</font>
+<font color ="#0000FF">* CREATE : 생성</font>
+<font color ="#0000FF">*   생성버튼을 누르면 재차 확인하는 POP-UP Message를 표시하고, '예'를 선택했을 때</font>
+<font color ="#0000FF">*   생산계획 생성을 한다.</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*  LV_UCOMM = OK_CODE.</font>
+<font color ="#0000FF">*  CLEAR OK_CODE.</font>
+  CASE OK_CODE.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'CREATE'.
+
+      DATA LV_ANSWER TYPE C1.
+      DATA(LV_MSG) = |{ GS_YMW-YEAR }년 { GS_YMW-MONTH }월 { GS_YMW-WEEK }주차 생산계획을 생성하시겠습니까?|.
+
+      PERFORM CONFIRM_MESSAGE USING '생산계획 생성'(T03)
+                                    LV_MSG
+                           CHANGING LV_ANSWER.
+
+      CASE LV_ANSWER.
+        WHEN '1'.
+<font color ="#0000FF">*         생산계획 생성 로직</font>
+          PERFORM CREATE_PLAN.
+        WHEN '2'.
+          MESSAGE I151. " 생산계획 생성을 취소하였습니다.
+      ENDCASE.
+
+    WHEN 'DISPLAY'.
+      PERFORM BDC_VIEW_PLAN.
+
+    WHEN 'ORDER'.
+      PERFORM BDC_VIEW_ORDER.
+  ENDCASE.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP090_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP090_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP090_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP090_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES : zca_pps060,
+         zca_aufk,
+         zca_makt,
+         zca_mara.
+
+DATA ok_code TYPE sy-ucomm.
+DATA gv_lines TYPE i.       "생산오더 alv line 수
+
+DATA : gt_rows TYPE lvc_t_row,
+       gs_row  LIKE LINE OF gt_rows.
+
+<font color ="#0000FF">*조회용 itab</font>
+DATA gt_bom     TYPE TABLE OF zca_stko.
+DATA gt_routing TYPE TABLE OF zca_plko.
+DATA gt_plant   TYPE TABLE OF zca_t001w.
+DATA gt_maktx   TYPE TABLE OF zca_makt.
+
+<font color ="#0000FF">*생산계획 alv</font>
+DATA : BEGIN OF gs_display_pl.
+         include structure <a href ="zca_pps010/dictionary-zca_pps010.html">zca_pps010</a>.
+DATA :   ppsts TYPE zca_ppt010-ppsts,
+       END OF gs_display_pl.
+
+DATA gt_display_pl LIKE TABLE OF gs_display_pl.
+
+<font color ="#0000FF">*생산오더 alv</font>
+DATA : BEGIN OF gs_display_po.
+         include structure <a href ="zca_pps020/dictionary-zca_pps020.html">zca_pps020</a>.
+DATA : END OF gs_display_po.
+
+DATA gt_display_po LIKE TABLE OF gs_display_po.
+
+<font color ="#0000FF">*screen field</font>
+"생산일정
+DATA po_date TYPE c LENGTH 30.
+
+<font color ="#0000FF">*ALV</font>
+DATA go_container_pl TYPE REF TO cl_gui_custom_container.
+DATA go_container_po TYPE REF TO cl_gui_custom_container.
+DATA go_alv_grid_pl  TYPE REF TO cl_gui_alv_grid.
+DATA go_alv_grid_po  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA gs_layout  TYPE lvc_s_layo.
+DATA gs_variant TYPE disvariant.
+DATA gv_save    TYPE c.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA gt_fieldcat TYPE lvc_t_fcat.
+DATA gs_fieldcat TYPE lvc_s_fcat.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

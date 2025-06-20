@@ -1,0 +1,538 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP060_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP060_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP060_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_NODE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_NODE CHANGING PT_NODE_DATA TYPE NODE_TABLE_TYPE.
+  DATA: LS_NODE     LIKE MTREESNODE.
+
+<font color ="#0000FF">*  DATA(LV_END_DATE) = SY-DATUM + 90. " 3개월 후 일자</font>
+<font color ="#0000FF">*  DATA: LV_DAY TYPE SCAL-INDICATOR. " 요일</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA(LV_CRT_DATE) = SY-DATUM.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CALL FUNCTION 'DATE_COMPUTE_DAY'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      DATE = SY-DATUM</font>
+<font color ="#0000FF">*    IMPORTING</font>
+<font color ="#0000FF">*      DAY  = LV_DAY.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 오늘 기준 다음 일요일을 구한다. ( 금주 생산계획은 세울 수 없다. )</font>
+<font color ="#0000FF">*  LV_CRT_DATE = LV_CRT_DATE + ( 7 - LV_DAY ).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  WHILE LV_CRT_DATE &lt; LV_END_DATE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ENDWHILE.</font>
+
+  SELECT
+    FROM ZCA_PPT010
+    FIELDS PYEAR, PMONTH, PWEEK
+    GROUP BY PYEAR, PMONTH, PWEEK
+    ORDER BY PYEAR, PMONTH, PWEEK
+    INTO TABLE @DATA(LT_NODE).
+
+  LOOP AT LT_NODE ASSIGNING FIELD-SYMBOL(&lt;FS_NODE&gt;).
+
+    AT NEW PYEAR.
+      LS_NODE-NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }|.
+      LS_NODE-ISFOLDER = 'X'.
+      LS_NODE-DISABLED = 'X'.
+      LS_NODE-TEXT     = |{ &lt;FS_NODE&gt;-PYEAR }년 생산계획|.
+      LS_NODE-EXPANDER = 'X'.
+      APPEND LS_NODE TO PT_NODE_DATA.
+    ENDAT.
+    AT NEW PMONTH.
+      LS_NODE-NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }{ &lt;FS_NODE&gt;-PMONTH }|.
+      LS_NODE-RELATKEY = |{ &lt;FS_NODE&gt;-PYEAR }|.
+      LS_NODE-ISFOLDER = 'X'.
+      LS_NODE-DISABLED = 'X'.
+      LS_NODE-TEXT     = |{ &lt;FS_NODE&gt;-PMONTH }월|.
+      LS_NODE-EXPANDER = 'X'.
+      APPEND LS_NODE TO PT_NODE_DATA.
+    ENDAT.
+    AT NEW PWEEK.
+      LS_NODE-NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }{ &lt;FS_NODE&gt;-PMONTH }{ &lt;FS_NODE&gt;-PWEEK }|.
+      LS_NODE-RELATKEY = |{ &lt;FS_NODE&gt;-PYEAR }{ &lt;FS_NODE&gt;-PMONTH }|.
+      LS_NODE-TEXT     = |{ &lt;FS_NODE&gt;-PWEEK }주차|.
+      APPEND LS_NODE TO PT_NODE_DATA.
+    ENDAT.
+
+  ENDLOOP.
+
+
+
+
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form BUILD_NODE_TABLE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM  BUILD_NODE_TABLE.
+  DATA: LS_NODE       LIKE MTREESNODE,
+        LT_NODE_TABLE TYPE NODE_TABLE_TYPE.
+
+  SELECT
+    FROM ZCA_DATE
+    FIELDS PYEAR, PMONTH, PWEEK, PFROMDATE, PTODATE
+    ORDER BY PYEAR, PMONTH, PWEEK
+    INTO TABLE @DATA(LT_DATE).
+
+  SELECT
+    FROM ZCA_PPT010
+    FIELDS PYEAR, PMONTH, PWEEK, PPSTS
+    WHERE LOEKZ NE @ABAP_ON
+      AND PLWRK EQ @PA_PLANT
+    ORDER BY PYEAR, PMONTH, PWEEK
+    INTO TABLE @DATA(LT_NODE).
+
+  LOOP AT LT_NODE ASSIGNING FIELD-SYMBOL(&lt;FS_NODE&gt;).
+
+    READ TABLE LT_DATE INTO DATA(LS_DATE_INFO) WITH KEY PYEAR  = &lt;FS_NODE&gt;-PYEAR
+                                                        PMONTH = &lt;FS_NODE&gt;-PMONTH
+                                                        PWEEK  = &lt;FS_NODE&gt;-PWEEK.
+
+
+
+    AT NEW PYEAR.
+      CLEAR LS_NODE.
+      LS_NODE-NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }|.
+      LS_NODE-ISFOLDER = 'X'.
+      LS_NODE-DISABLED = 'X'.
+      LS_NODE-TEXT     = |{ &lt;FS_NODE&gt;-PYEAR }년 생산계획|.
+      LS_NODE-EXPANDER = 'X'.
+      APPEND LS_NODE TO LT_NODE_TABLE.
+
+    ENDAT.
+    AT NEW PMONTH.
+      CLEAR LS_NODE.
+      LS_NODE-NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }{ &lt;FS_NODE&gt;-PMONTH }|.
+      LS_NODE-RELATKEY = |{ &lt;FS_NODE&gt;-PYEAR }|.
+      LS_NODE-ISFOLDER = 'X'.
+      LS_NODE-TEXT     = |{ &lt;FS_NODE&gt;-PMONTH }월|.
+      LS_NODE-EXPANDER = 'X'.
+      APPEND LS_NODE TO LT_NODE_TABLE.
+    ENDAT.
+    AT NEW PWEEK.
+      CLEAR LS_NODE.
+      LS_NODE-NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }{ &lt;FS_NODE&gt;-PMONTH }{ &lt;FS_NODE&gt;-PWEEK }|.
+      LS_NODE-RELATKEY = |{ &lt;FS_NODE&gt;-PYEAR }{ &lt;FS_NODE&gt;-PMONTH }|.
+      LS_NODE-TEXT     = |{ &lt;FS_NODE&gt;-PWEEK }주차 { LS_DATE_INFO-PFROMDATE+4(2) }/{ LS_DATE_INFO-PFROMDATE+6(2) } ~ { LS_DATE_INFO-PTODATE+4(2) }/{ LS_DATE_INFO-PTODATE+6(2) }|.
+      IF &lt;FS_NODE&gt;-PPSTS EQ 'A'.
+        LS_NODE-N_IMAGE = '@5B@'.
+      ELSE.
+        LS_NODE-N_IMAGE = '@5D@'.
+        LS_NODE-TEXT = |{ LS_NODE-TEXT } [승인 필요]|.
+      ENDIF.
+      APPEND LS_NODE TO LT_NODE_TABLE.
+    ENDAT.
+
+  ENDLOOP.
+
+  CLEAR LS_NODE.
+
+  CALL METHOD GO_TREE-&gt;ADD_NODES
+    EXPORTING
+      TABLE_STRUCTURE_NAME = 'MTREESNODE'
+      NODE_TABLE           = LT_NODE_TABLE. "트리 데이터 들어가있는 int
+
+  LOOP AT LT_NODE_TABLE INTO LS_NODE.
+
+    DATA(LV_LENGTH) = STRLEN( LS_NODE-NODE_KEY ).
+
+    IF LV_LENGTH NE 4.
+      CONTINUE.
+    ENDIF.
+
+    CALL METHOD GO_TREE-&gt;EXPAND_NODE
+      EXPORTING
+        NODE_KEY = |{ &lt;FS_NODE&gt;-PYEAR }|.
+  ENDLOOP.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_SCREEN_OBJ</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_SCREEN_OBJ .
+
+  CREATE OBJECT GO_CONTAINER
+    EXPORTING
+      CONTAINER_NAME = 'CCON'.
+
+  CREATE OBJECT GO_ALV_GRID
+    EXPORTING
+      I_PARENT = GO_CONTAINER.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYOUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYOUT.
+
+  CLEAR GS_LAYO.
+  GS_LAYO-SEL_MODE = 'D'.
+  GS_LAYO-ZEBRA = ABAP_ON.
+  GS_LAYO-GRID_TITLE = '생산계획 세부조회'.
+  GS_LAYO-NO_TOTLINE = 'X'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CATALOG</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FIELD_CATALOG .
+
+  CLEAR GS_FCAT.
+  GS_FCAT-REF_TABLE = 'ZCA_PPT020'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-COLTEXT   = '완제품코드'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  GS_FCAT-KEY       = 'X'.
+  APPEND GS_FCAT TO GT_FCAT.
+  CLEAR GS_FCAT.
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-COLTEXT   = '완제품명'.
+  GS_FCAT-OUTPUTLEN = '15'.
+  APPEND GS_FCAT TO GT_FCAT.
+  CLEAR GS_FCAT.
+  GS_FCAT-REF_TABLE = 'ZCA_PPT010'.
+  GS_FCAT-REF_FIELD = 'PLWRK'.
+  GS_FCAT-FIELDNAME = 'PLWRK'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT.
+  CLEAR GS_FCAT.
+  GS_FCAT-REF_TABLE = 'ZCA_T001W'.
+  GS_FCAT-REF_FIELD = 'PNAME'.
+  GS_FCAT-FIELDNAME = 'PNAME'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT.
+  CLEAR GS_FCAT.
+  GS_FCAT-REF_TABLE = 'ZCA_PPT020'.
+  GS_FCAT-REF_FIELD = 'GSMNG'.
+  GS_FCAT-FIELDNAME = 'GSMNG'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '15'.
+  APPEND GS_FCAT TO GT_FCAT.
+  CLEAR GS_FCAT.
+  GS_FCAT-REF_TABLE = 'ZCA_PPT020'.
+  GS_FCAT-REF_FIELD = 'MEINS'.
+  GS_FCAT-FIELDNAME = 'MEINS'.
+  GS_FCAT-COLTEXT   = '단위'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SHOW_ALV</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SHOW_ALV .
+
+<font color ="#0000FF">* ALV 출력</font>
+  CALL METHOD GO_ALV_GRID-&gt;SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+      IS_LAYOUT       = GS_LAYO
+      IS_VARIANT      = GS_VARIANT
+      I_SAVE          = GV_SAVE
+    CHANGING
+      IT_FIELDCATALOG = GT_FCAT
+      IT_OUTTAB       = GT_DATA.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH_GRID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM REFRESH_GRID USING PV_VARIANT_NAME TYPE DISVARIANT-VARIANT.
+
+  GS_VARIANT-VARIANT = PV_VARIANT_NAME.
+
+  CALL METHOD GO_ALV_GRID-&gt;SET_VARIANT
+    EXPORTING
+      IS_VARIANT = GS_VARIANT.
+
+  CALL METHOD GO_ALV_GRID-&gt;SET_FRONTEND_LAYOUT
+    EXPORTING
+      IS_LAYOUT = GS_LAYO.
+
+<font color ="#0000FF">*  DATA: L_SCROLL TYPE LVC_S_STBL.</font>
+<font color ="#0000FF">*  L_SCROLL-ROW = 'X'.</font>
+<font color ="#0000FF">*  L_SCROLL-COL = 'X'.</font>
+<font color ="#0000FF">*  CALL METHOD GO_ALV_GRID-&gt;REFRESH_TABLE_DISPLAY</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      I_SOFT_REFRESH = ''</font>
+<font color ="#0000FF">*      IS_STABLE      = L_SCROLL.</font>
+  CALL METHOD GO_ALV_GRID-&gt;SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+      IS_VARIANT      = GS_VARIANT
+      I_SAVE          = 'A'
+      IS_LAYOUT       = GS_LAYO
+    CHANGING
+      IT_OUTTAB       = GT_DATA
+      IT_FIELDCATALOG = GT_FCAT.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SEARCH_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SEARCH_DATA .
+
+  IF ZCA_PPT010-PLNUM IS NOT INITIAL.
+
+    SELECT PPT010~PLNUM
+           PPT010~PYEAR
+           PPT010~PMONTH
+           PPT010~PWEEK
+           PPT010~PSTTR
+           PPT010~PEDTR
+           PPT010~MRPID
+           PPT010~ERNAM
+           PPT010~ERDAT
+           PPT010~ERZET
+           PPT010~PLWRK
+           T001W~PNAME
+           PPT020~MATNR
+           MAKT~MAKTX
+           PPT020~GSMNG
+           PPT020~MEINS
+      FROM ZCA_PPT020 AS PPT020
+      INNER JOIN ZCA_PPT010 AS PPT010
+      ON PPT020~PLNUM EQ PPT010~PLNUM
+      INNER JOIN ZCA_T001W AS T001W
+      ON PPT010~PLWRK EQ T001W~WERKS
+      INNER JOIN ZCA_MAKT AS MAKT
+      ON PPT020~MATNR EQ MAKT~MATNR
+      AND MAKT~SPRAS EQ 3
+      INTO CORRESPONDING FIELDS OF TABLE GT_DATA WHERE PPT010~PLNUM EQ ZCA_PPT010-PLNUM.
+
+    IF SY-SUBRC NE 0.
+      MESSAGE S152 DISPLAY LIKE 'W'. " 해당 생산계획이 없습니다!
+      GV_FIELD_CHANGE_FLAG = ABAP_OFF.
+      RETURN.
+    ENDIF.
+
+    READ TABLE GT_DATA INTO DATA(LS_DATA) INDEX 1.
+
+    ZCA_PPT010 = VALUE #(
+
+      PLNUM  = LS_DATA-PLNUM
+<font color ="#0000FF">*      PYEAR  = LS_DATA-PYEAR</font>
+<font color ="#0000FF">*      PMONTH = LS_DATA-PMONTH</font>
+<font color ="#0000FF">*      PWEEK  = LS_DATA-PWEEK</font>
+      PSTTR  = LS_DATA-PSTTR
+      PEDTR  = LS_DATA-PEDTR
+      MRPID  = LS_DATA-MRPID
+      PLWRK  = LS_DATA-PLWRK
+      ERNAM  = LS_DATA-ERNAM
+      ERDAT  = LS_DATA-ERDAT
+      ERZET  = LS_DATA-ERZET
+
+    ).
+
+    GV_PLAN_INFO = |{ LS_DATA-PYEAR }년 { LS_DATA-PMONTH }월 { LS_DATA-PWEEK } 주차|.
+    GV_FIELD_CHANGE_FLAG = ABAP_ON.
+
+  ELSE.
+    MESSAGE S153 DISPLAY LIKE 'E'. " 생산계획 번호를 입력해주세요.
+    GV_FIELD_CHANGE_FLAG = ABAP_OFF.
+
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form NODE_DOUBLE_CLICK_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM NODE_DOUBLE_CLICK_0100  USING    PV_NODE_KEY.
+
+  CLEAR: ZCA_PPT010, GT_DATA.
+
+  DATA: LS_YMW  TYPE ZCA_DATE_FIELDS,
+        LS_DATA LIKE LINE OF GT_DATA.
+
+  LS_YMW-YEAR  = CONV NUMC4( PV_NODE_KEY+0(4) ).
+  LS_YMW-MONTH = CONV NUMC2( PV_NODE_KEY+4(2) ).
+  LS_YMW-WEEK  = CONV NUMC1( PV_NODE_KEY+6(1) ).
+
+  IF LS_YMW-WEEK EQ 0.
+    SELECT PPT010~PLNUM
+         PPT010~PYEAR
+         PPT010~PMONTH
+         PPT010~PWEEK
+         PPT010~PSTTR
+         PPT010~PEDTR
+         PPT010~MRPID
+         PPT010~ERNAM
+         PPT010~ERDAT
+         PPT010~ERZET
+         PPT010~PLWRK
+         T001W~PNAME
+         PPT020~MATNR
+         MAKT~MAKTX
+         PPT020~GSMNG
+         PPT020~MEINS
+    FROM ZCA_PPT020 AS PPT020
+    INNER JOIN ZCA_PPT010 AS PPT010
+    ON PPT020~PLNUM EQ PPT010~PLNUM
+    INNER JOIN ZCA_T001W AS T001W
+    ON PPT010~PLWRK EQ T001W~WERKS
+    INNER JOIN ZCA_MAKT AS MAKT
+    ON PPT020~MATNR EQ MAKT~MATNR
+    AND MAKT~SPRAS EQ 3
+    INTO CORRESPONDING FIELDS OF TABLE GT_DATA
+      WHERE PPT010~PYEAR EQ LS_YMW-YEAR
+        AND PPT010~PMONTH EQ LS_YMW-MONTH.
+
+    READ TABLE GT_DATA INTO LS_DATA INDEX 1.
+
+    CLEAR ZCA_PPT010.
+    GV_PLAN_INFO = |{ LS_YMW-YEAR }년 { LS_YMW-MONTH }월|.
+
+    GV_FIELD_CHANGE_FLAG_MONTH = ABAP_ON.
+
+  ELSE.
+    SELECT PPT010~PLNUM
+         PPT010~PYEAR
+         PPT010~PMONTH
+         PPT010~PWEEK
+         PPT010~PSTTR
+         PPT010~PEDTR
+         PPT010~MRPID
+         PPT010~ERNAM
+         PPT010~ERDAT
+         PPT010~ERZET
+         PPT010~PLWRK
+         T001W~PNAME
+         PPT020~MATNR
+         MAKT~MAKTX
+         PPT020~GSMNG
+         PPT020~MEINS
+    FROM ZCA_PPT020 AS PPT020
+    INNER JOIN ZCA_PPT010 AS PPT010
+    ON PPT020~PLNUM EQ PPT010~PLNUM
+    INNER JOIN ZCA_T001W AS T001W
+    ON PPT010~PLWRK EQ T001W~WERKS
+    INNER JOIN ZCA_MAKT AS MAKT
+    ON PPT020~MATNR EQ MAKT~MATNR
+    AND MAKT~SPRAS EQ 3
+    INTO CORRESPONDING FIELDS OF TABLE GT_DATA
+      WHERE PPT010~PYEAR EQ LS_YMW-YEAR
+        AND PPT010~PMONTH EQ LS_YMW-MONTH
+        AND PPT010~PWEEK EQ LS_YMW-WEEK.
+
+    READ TABLE GT_DATA INTO LS_DATA INDEX 1.
+
+    ZCA_PPT010 = VALUE #(
+
+  PLNUM  = LS_DATA-PLNUM
+  PYEAR  = LS_DATA-PYEAR
+  PMONTH = LS_DATA-PMONTH
+  PWEEK  = LS_DATA-PWEEK
+  PSTTR  = LS_DATA-PSTTR
+  PEDTR  = LS_DATA-PEDTR
+  MRPID  = LS_DATA-MRPID
+  PLWRK  = LS_DATA-PLWRK
+  ERNAM  = LS_DATA-ERNAM
+  ERDAT  = LS_DATA-ERDAT
+  ERZET  = LS_DATA-ERZET
+
+  ).
+
+
+    GV_PLAN_INFO = |{ LS_DATA-PYEAR }년 { LS_DATA-PMONTH }월 { LS_DATA-PWEEK } 주차|.
+    GV_FIELD_CHANGE_FLAG = ABAP_ON.
+
+  ENDIF.
+
+
+
+<font color ="#0000FF">*  PERFORM REFRESH_GRID.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH_SCREEN100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM REFRESH_SCREEN100 .
+  CLEAR ZCA_PPT010.
+  CLEAR: GT_DATA, GV_PLAN_INFO.
+  REFRESH GT_DATA.
+
+  IF GO_ALV_GRID IS BOUND.
+    GS_LAYO-GRID_TITLE = '생산계획 세부조회'.
+    PERFORM REFRESH_GRID USING '/DEFUALT'.
+  ENDIF.
+
+<font color ="#0000FF">*  CALL METHOD GO_TREE-&gt;DELETE_ALL_NODES.</font>
+<font color ="#0000FF">*  PERFORM BUILD_NODE_TABLE.</font>
+
+  MESSAGE S154. " 초기화되었습니다.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form INPUT_CHECK_PLANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM INPUT_CHECK_PLANT .
+
+  SELECT SINGLE PTYPE, PNAME
+    FROM ZCA_T001W
+    INTO @DATA(LS_CHECK)
+    WHERE WERKS EQ @PA_PLANT.
+
+  IF LS_CHECK-PTYPE NE 'PROD'.
+    MESSAGE E160. "생산공장을 선택해주세요.
+  ELSE.
+    GV_TITLE_SCR100 = |[PP][{ LS_CHECK-PNAME }-{ PA_PLANT }] 생산계획 조회|.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_VARIANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_VARIANT .
+  CLEAR GS_VARIANT.
+  GS_VARIANT-REPORT = SY-CPROG.
+  GS_VARIANT-HANDLE = 1.
+  GV_SAVE = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form BDC_VIEW_MRP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM BDC_VIEW_MRP USING VALUE(PV_MRPID) TYPE ZCA_PPT030-MRPID.
+  DATA: LT_BDCDATA TYPE TABLE OF BDCDATA,
+        LS_BDCDATA TYPE          BDCDATA.
+
+  APPEND VALUE #( PROGRAM = 'ZCA_PP080' DYNPRO = '1000' DYNBEGIN = 'X' ) TO LT_BDCDATA.
+  APPEND VALUE #( FNAM = 'PA_PLANT'   FVAL = PA_PLANT ) TO LT_BDCDATA.
+  APPEND VALUE #( FNAM = 'BDC_OKCODE' FVAL = '=ONLI' ) TO LT_BDCDATA.
+
+  APPEND VALUE #( PROGRAM = 'ZCA_PP080' DYNPRO = '0100' DYNBEGIN = 'X' ) TO LT_BDCDATA.
+  APPEND VALUE #( FNAM = 'ZCA_PPT030-MRPID' FVAL = PV_MRPID ) TO LT_BDCDATA.
+  APPEND VALUE #( FNAM = 'BDC_OKCODE' FVAL = '=SEARCH' ) TO LT_BDCDATA.
+
+  CALL TRANSACTION 'ZCAPP080' USING LT_BDCDATA MODE 'E'.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

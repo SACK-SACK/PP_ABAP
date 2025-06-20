@@ -1,0 +1,591 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP020_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP020_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP020_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP020_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_tree</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_tree .
+  DATA: lt_node_table TYPE node_table_type,
+        events        TYPE cntl_simple_events,   "더블클릭 이벤트
+        event         TYPE cntl_simple_event.    "더블클릭 이벤트.
+
+<font color ="#0000FF">*  docking container</font>
+  CREATE OBJECT go_tree_con
+    EXPORTING
+      repid     = sy-cprog                                    " Report to Which This Docking Control is Linked
+      dynnr     = sy-dynnr                                    " Screen to Which This Docking Control is Linked
+      side      = cl_gui_docking_container=&gt;dock_at_left      " Side to Which Control is Docked
+      extension = 500.                                         " Control Extension`
+
+<font color ="#0000FF">* simple tree</font>
+  CREATE OBJECT go_tree
+    EXPORTING
+      parent              = go_tree_con
+      node_selection_mode = cl_gui_simple_tree=&gt;node_sel_mode_single.
+
+<font color ="#0000FF">* 노드 생성</font>
+  PERFORM build_node_table USING lt_node_table.
+<font color ="#0000FF">*</font>
+  CALL METHOD go_tree-&gt;add_nodes
+    EXPORTING
+      table_structure_name = 'MTREESNODE'
+      node_table           = lt_node_table. "트리 데이터 들어가있는 int
+
+  LOOP AT lt_node_table INTO DATA(ls_node).
+    IF ls_node-isfolder = abap_on.                 " 폴더(하위 노드 있음)
+      CALL METHOD go_tree-&gt;expand_node  " 해당 노드 확장
+        EXPORTING
+          node_key = ls_node-node_key.
+    ENDIF.
+  ENDLOOP.
+
+<font color ="#0000FF">*  이벤트</font>
+  CREATE OBJECT go_node_event.
+
+  event-eventid = cl_gui_simple_tree=&gt;eventid_node_double_click.
+  event-appl_event = 'X'.
+  APPEND event TO events.
+
+<font color ="#0000FF">*트리 이벤트 등록</font>
+  CALL METHOD go_tree-&gt;set_registered_events
+    EXPORTING
+      events                    = events
+    EXCEPTIONS
+      cntl_error                = 1
+      cntl_system_error         = 2
+      illegal_event_combination = 3.
+
+<font color ="#0000FF">*이벤트 핸들러</font>
+  SET HANDLER go_node_event-&gt;handle_node_double_click FOR go_tree.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form build_node_table</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM build_node_table  USING pt_node_table TYPE node_table_type.
+  DATA : ls_node TYPE mtreesnode.
+  DATA: ls_stpo  TYPE zca_stpo,
+        lt_stpo  TYPE TABLE OF zca_stpo,  "제품의 투입자재
+        lt_stpo2 TYPE TABLE OF zca_stpo,  "반제품의 투입자재
+        lv_stlnr TYPE zca_stlnr.          " BOM ID
+
+<font color ="#0000FF">*  "node key 중복을 제거하기 위한 변수</font>
+  DATA: lv_node_key TYPE numc12,
+        lv_relatkey TYPE char12.
+
+  " 자재명 변수
+  DATA lv_maktx TYPE zca_maktx.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+  " 1. 상위 제품 노드 생성
+
+  LOOP AT gt_head INTO gs_head.
+
+    READ TABLE gt_makt INTO gs_makt WITH KEY matnr = gs_head-matnr.
+
+    CLEAR ls_node.
+    ls_node-node_key = gs_head-stlnr.
+    ls_node-isfolder = abap_on.
+    ls_node-text     = gs_head-matnr && '-' && gs_makt-maktx .
+    ls_node-expander = abap_on.
+    APPEND ls_node TO pt_node_table.
+
+<font color ="#0000FF">* 상위 BOM의 아이템 정보(투입자재)를 가져온다</font>
+    SELECT
+      stlnr
+      idnrk
+    FROM zca_stpo
+    INTO CORRESPONDING FIELDS OF TABLE lt_stpo
+    WHERE stlnr EQ gs_head-stlnr.
+
+<font color ="#0000FF">* 반제품 노드의 relatkey를 상위 BOM ID로 지정한다.</font>
+    lv_relatkey = gs_head-stlnr.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+    " 2. 반제품, 원자재 하위 노드 생성
+
+    LOOP AT lt_stpo INTO ls_stpo.
+      READ TABLE gt_makt INTO gs_makt WITH KEY matnr = ls_stpo-idnrk.
+
+<font color ="#0000FF">* 위에서 select 해온 제품의 투입자재 BOM ID가 있는지 조회한다.</font>
+      SELECT SINGLE stlnr
+        FROM zca_stko
+        INTO lv_stlnr
+        WHERE matnr = ls_stpo-idnrk.
+
+
+      IF sy-subrc EQ 0.
+<font color ="#0000FF">* BOM ID가 있다면, 아이템 테이블에서 해당 BOM ID의 투입자재를 조회한다.</font>
+        SELECT
+           stlnr
+           idnrk
+         FROM zca_stpo
+         INTO CORRESPONDING FIELDS OF TABLE lt_stpo2
+         WHERE stlnr EQ lv_stlnr.
+        SORT lt_stpo2 BY stlnr idnrk.
+      ENDIF.
+
+      IF sy-subrc EQ 0.  " lv_stlnr is not initial
+        LOOP AT lt_stpo2 INTO DATA(ls_stpo2).
+
+<font color ="#0000FF">* 제품의 하위 노드로 반제품을 생성한다.</font>
+          CLEAR ls_node.
+          AT FIRST.
+            CLEAR ls_node.
+            ls_node-node_key = |{ gs_head-stlnr+2(3) }{ ls_stpo-idnrk+3(5) }|.
+            ls_node-relatkey = lv_relatkey.
+            ls_node-isfolder = abap_on.
+            ls_node-text     = ls_stpo-idnrk && '-' && gs_makt-maktx .
+            ls_node-expander = abap_on.
+            APPEND ls_node TO pt_node_table.
+
+<font color ="#0000FF">* 원재료 노드의 relatkey 를 반제품 node key로 지정한다.</font>
+            lv_relatkey = |{ gs_head-stlnr+2(3) }{ ls_stpo-idnrk+3(5) }|.
+          ENDAT.
+
+<font color ="#0000FF">* 반제품에 투입되는 원재료를 노드로 생성한다.</font>
+          CLEAR ls_node.
+          ls_node-node_key = |{ gs_head-stlnr+2(3) }{ lv_stlnr+2(3) }{ ls_stpo2-idnrk+3(5) }|.
+          ls_node-relatkey = lv_relatkey.
+          ls_node-text     = ls_stpo2-idnrk.
+          ls_node-disabled = abap_on.         "노드 더블클릭 이벤트 작동 x
+          APPEND ls_node TO pt_node_table.
+
+        ENDLOOP.
+      ELSE.
+<font color ="#0000FF">* 제품 하위에 반제품 없이 원재료인 경우, 제품의 하위로 원재료를 노드로 생성한다.</font>
+        lv_node_key = lv_node_key + 1.
+        CLEAR ls_node.
+        ls_node-node_key = |{ gs_head-stlnr+2(3) }{ ls_stpo-idnrk+3(5) }|.
+        ls_node-relatkey = lv_relatkey.
+        ls_node-text     = ls_stpo-idnrk.
+        ls_node-disabled = abap_on.
+        APPEND ls_node TO pt_node_table.
+      ENDIF.
+
+      lv_relatkey = gs_head-stlnr.
+
+      CLEAR: ls_stpo2.
+    ENDLOOP.
+
+    CLEAR: ls_stpo.
+    CLEAR: lv_relatkey.
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form start_of_selection</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM start_of_selection .
+<font color ="#0000FF">* bom 헤더 테이블 조회</font>
+  PERFORM select_stko.
+<font color ="#0000FF">* bom 아이템 테이블 조회</font>
+  PERFORM select_stpo.
+<font color ="#0000FF">* 자재명 조회</font>
+  PERFORM get_text_maktx USING gt_makt.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_stko</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_stko .
+  CLEAR: gt_head.
+
+  SELECT
+   stlnr
+   matnr
+   werks
+   bmeng
+   bmein
+   datuv
+   vaild_to
+   loekz
+   FROM zca_stko
+   INTO TABLE gt_head
+   WHERE matnr IN s_matnr
+    AND werks IN s_werks
+    AND datuv IN s_datuv
+    AND loekz EQ space.
+
+  SORT gt_head BY stlnr.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_text_maktx</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+FORM get_text_maktx  USING pt_makt LIKE gt_makt.
+
+  CLEAR pt_makt.
+  SELECT
+    a~matnr
+    a~maktx
+    b~mrart
+    FROM zca_makt AS a
+    INNER JOIN zca_mara AS b
+     ON a~matnr EQ b~matnr
+    INTO TABLE pt_makt
+    WHERE spras EQ sy-langu.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_for_bom</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_for_bom .
+  IF gt_head IS NOT INITIAL.
+    CALL SCREEN 0100.
+  ELSE.
+    MESSAGE s100 DISPLAY LIKE 'E'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object .
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name = 'CCON'.
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = go_container.
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form variant</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM variant .
+  gs_variant-report = sy-cprog.
+  gv_save = 'A'. "개인. 공용 저장 모두 지원
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form layout</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM layout .
+  gs_layout-sel_mode = 'D'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv .
+  CALL METHOD go_alv_grid-&gt;set_table_for_first_display
+    EXPORTING
+      is_variant      = gs_variant
+      i_save          = gv_save
+<font color ="#0000FF">*     i_default       = 'X'</font>
+      is_layout       = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab       = gt_display
+      it_fieldcatalog = gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_stpo</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_stpo .
+  SELECT
+    stlnr
+    posnr
+    datuv
+    vaild_to
+    idnrk
+    menge
+    meins
+    loekz
+   FROM zca_stpo
+   INTO CORRESPONDING FIELDS OF TABLE gt_item
+    WHERE loekz EQ space.
+  SORT gt_item BY stlnr posnr.
+
+  MOVE-CORRESPONDING gt_item TO gt_item2.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_node_double_click</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_node_double_click  USING p_node_key TYPE tv_nodekey.
+  DATA lv_stlnr TYPE zca_stlnr.
+  DATA lv_stlnr2 TYPE zca_stlnr.
+  DATA lv_matnr TYPE zca_matnr.
+  DATA lv_matnr2 TYPE zca_matnr.
+
+  DATA p_node_bom TYPE tv_nodekey.
+  DATA p_node_mat TYPE tv_nodekey.
+
+  DATA lv_length TYPE i. "p_node_key 자릿수를 읽어오는 변수
+
+  CLEAR lv_stlnr.
+  SELECT SINGLE
+    stlnr
+    FROM zca_stko
+    INTO lv_stlnr
+    WHERE stlnr EQ p_node_key.
+
+  IF sy-subrc EQ 0.
+    REFRESH gt_display.
+<font color ="#0000FF">*    bom header 정보</font>
+    PERFORM bom_header_value USING p_node_key.
+
+<font color ="#0000FF">* bom header의 아이템 정보 (반제품 조회)</font>
+    SELECT
+     a~stlnr
+     a~posnr
+     a~datuv
+     a~vaild_to
+     a~idnrk
+     b~maktx
+     c~mrart
+     a~menge
+     a~meins
+     a~loekz
+     d~lgort
+     d~lgobe
+   FROM zca_stpo AS a
+   INNER JOIN  zca_makt AS b
+      ON a~idnrk EQ b~matnr
+   INNER JOIN zca_mara AS c
+      ON b~matnr EQ c~matnr
+   INNER JOIN zca_mard AS d
+      ON c~matnr EQ d~matnr
+   INTO TABLE gt_display
+   WHERE spras EQ sy-langu
+     AND stlnr EQ p_node_key
+     AND loekz EQ space
+     AND lgort NE 'SL04'
+     AND werks IN s_werks.
+
+  ELSE.
+    CLEAR : p_node_mat,
+            lv_matnr.
+    p_node_mat = p_node_key+3(5).
+    CONCATENATE 'MAT' p_node_mat INTO lv_matnr.
+
+    CLEAR lv_stlnr.
+    SELECT SINGLE
+       stlnr
+      FROM zca_stko
+      INTO lv_stlnr
+      WHERE matnr EQ lv_matnr.
+
+    IF sy-subrc EQ 0.
+<font color ="#0000FF">*     bom header 정보</font>
+      PERFORM bom_header_value USING lv_stlnr.
+
+<font color ="#0000FF">*  반제품 하위 원재료 상세조회</font>
+      SELECT
+       a~stlnr
+       a~posnr
+       a~datuv
+       a~vaild_to
+       a~idnrk
+       b~maktx
+       c~mrart
+       a~menge
+       a~meins
+       a~loekz
+       d~lgort
+       d~lgobe
+    FROM zca_stpo AS a
+    INNER JOIN  zca_makt AS b
+      ON a~idnrk EQ b~matnr
+    INNER JOIN zca_mara AS c
+       ON b~matnr EQ c~matnr
+    INNER JOIN zca_mard AS d
+       ON c~matnr EQ d~matnr
+    INTO TABLE gt_display
+    WHERE spras EQ sy-langu
+    AND stlnr EQ lv_stlnr
+    AND loekz EQ space
+    AND lgort NE 'SL04'
+    AND werks IN s_werks.
+      .
+    ENDIF.
+  ENDIF.
+
+  SORT gt_display BY posnr.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fieldcatalog</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fieldcatalog .
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'POSNR'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'POSNR'.
+  gs_fieldcat-outputlen = 10.
+  gs_fieldcat-key   = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'IDNRK'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'IDNRK'.
+  gs_fieldcat-coltext = '투입자재'.
+  gs_fieldcat-outputlen = 10.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-ref_table = 'ZCA_MAKT'.
+  gs_fieldcat-ref_field = 'MAKTX'.
+  gs_fieldcat-coltext = '자재명'.
+  gs_fieldcat-outputlen = 15.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MRART'.
+  gs_fieldcat-ref_table = 'ZCA_MARA'.
+  gs_fieldcat-ref_field = 'MRART'.
+  gs_fieldcat-coltext = '자재유형'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MENGE'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'MENGE'.
+  gs_fieldcat-coltext = '수량'.
+  gs_fieldcat-outputlen = 5.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'MEINS'.
+  gs_fieldcat-coltext = '단위'.
+  gs_fieldcat-outputlen = 5.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'DATUV'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'DATUV'.
+  gs_fieldcat-coltext = '유효 시작일'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'VAILD_TO'.
+  gs_fieldcat-ref_table = 'ZCA_STPO'.
+  gs_fieldcat-ref_field = 'VAILD_TO'.
+  gs_fieldcat-coltext = '유효 종료일'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'LGORT'.
+  gs_fieldcat-ref_table = 'ZCA_MARD'.
+  gs_fieldcat-ref_field = 'LGORT'.
+  gs_fieldcat-coltext = '저장 창고'.
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'LGOBE'.
+  gs_fieldcat-ref_table = 'ZCA_MARD'.
+  gs_fieldcat-ref_field = 'LGOBE'.
+  gs_fieldcat-coltext = '창고명'.
+  gs_fieldcat-outputlen = 7.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form bom_header_value</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM bom_header_value USING VALUE(p_node_key).
+
+  DATA lv_pname TYPE zca_pname.
+  DATA ls_bom_head TYPE zca_stko.
+
+  SELECT SINGLE
+    stlnr
+    matnr
+    bmeng
+    bmein
+    datuv
+    vaild_to
+    werks
+    FROM zca_stko
+    INTO CORRESPONDING FIELDS OF ls_bom_head
+    WHERE stlnr EQ p_node_key
+      AND loekz EQ space.
+
+  IF sy-subrc EQ 0.
+    READ TABLE  gt_makt INTO gs_makt WITH KEY matnr = ls_bom_head-matnr.
+
+    CLEAR lv_pname.
+    SELECT SINGLE
+       pname
+      FROM zca_t001w
+      INTO lv_pname
+      WHERE werks EQ ls_bom_head-werks.
+
+    SELECT SINGLE
+      lgort
+      lgobe
+      FROM zca_mard
+      INTO CORRESPONDING FIELDS OF zca_mard
+      WHERE werks EQ ls_bom_head-werks
+        AND lgort NE 'SL04'
+        AND matnr EQ ls_bom_head-matnr.
+
+
+<font color ="#0000FF">*  header 필드에 값 채우기</font>
+    PERFORM clear_bom_header .
+    zca_stko-stlnr    = ls_bom_head-stlnr.
+    zca_t001w-werks   = ls_bom_head-werks.
+    zca_t001w-pname   = lv_pname.
+    zca_stko-matnr    = ls_bom_head-matnr.
+    zca_makt-maktx    = gs_makt-maktx.
+    zca_mara-mrart    = gs_makt-mrart.
+    zca_stko-bmeng    = ls_bom_head-bmeng.
+    zca_stko-bmein    = ls_bom_head-bmein.
+    zca_stko-datuv    = ls_bom_head-datuv.
+    zca_stko-vaild_to = ls_bom_head-vaild_to.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form clear_bom_header</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM clear_bom_header .
+  CLEAR: zca_stko-stlnr,
+         zca_t001w-werks,
+         zca_t001w-pname,
+         zca_stko-matnr,
+         zca_makt-maktx,
+         zca_mara-mrart,
+         zca_stko-bmeng,
+         zca_stko-bmein,
+         zca_stko-datuv,
+         zca_stko-vaild_to,
+         zca_stko-loekz.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP080_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP080_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP080_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_SCREEN_OBJ</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_SCREEN_OBJ USING PO_CONTAINER TYPE REF TO CL_GUI_CUSTOM_CONTAINER
+                             PO_ALV_GRID  TYPE REF TO CL_GUI_ALV_GRID
+                             PV_CON_NAME.
+
+  CREATE OBJECT PO_CONTAINER
+    EXPORTING
+      CONTAINER_NAME = PV_CON_NAME.
+
+  CREATE OBJECT PO_ALV_GRID
+    EXPORTING
+      I_PARENT = PO_CONTAINER.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SHOW_ALV</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SHOW_ALV USING PO_ALV_GRID TYPE REF TO CL_GUI_ALV_GRID
+                    PS_LAYO     TYPE LVC_S_LAYO
+                    PT_FCAT     TYPE LVC_T_FCAT
+                    PT_DISPLAY  TYPE ANY TABLE.
+
+<font color ="#0000FF">* ALV 출력</font>
+  CALL METHOD PO_ALV_GRID-&gt;SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+      IS_LAYOUT       = PS_LAYO
+      IS_VARIANT      = GS_VARIANT
+      I_SAVE          = GV_SAVE
+    CHANGING
+      IT_FIELDCATALOG = PT_FCAT
+      IT_OUTTAB       = PT_DISPLAY.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH_GRID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM REFRESH_GRID .
+  GO_ALV_GRID1-&gt;REFRESH_TABLE_DISPLAY( ).
+  GO_ALV_GRID2-&gt;REFRESH_TABLE_DISPLAY( ).
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYOUT_CCON1</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYOUT_CCON1 .
+  CLEAR GS_LAYO1.
+  GS_LAYO1-SEL_MODE = 'D'.
+  GS_LAYO1-ZEBRA = ABAP_ON.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CATALOG_CCON1</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FIELD_CATALOG_CCON1 .
+
+  REFRESH GT_FCAT.
+  CLEAR GS_FCAT.
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재코드
+
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재명
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'STOCK'.
+  GS_FCAT-FIELDNAME = 'STOCK'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 현재 가용 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'PLNQT'.
+  GS_FCAT-FIELDNAME = 'PLNQT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 소요 확정 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'USEQT'.
+  GS_FCAT-FIELDNAME = 'USEQT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 소요 계획 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'RESQT'.
+  GS_FCAT-FIELDNAME = 'RESQT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매요청 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'MEINS'.
+  GS_FCAT-FIELDNAME = 'MEINS'.
+  GS_FCAT-COLTEXT   = '단위'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재 수량 단위
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'MRPDT'.
+  GS_FCAT-FIELDNAME = 'MRPDT'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " MRP 실행일자
+
+  GS_FCAT-REF_TABLE = 'ZCA_PPT030'.
+  GS_FCAT-REF_FIELD = 'BANFN'.
+  GS_FCAT-FIELDNAME = 'BANFN'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매요청 코드
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CATALOG_CCON2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FIELD_CATALOG_CCON2 .
+
+  REFRESH GT_FCAT.
+  CLEAR GS_FCAT.
+
+  GS_FCAT-FIELDNAME = 'STATUS_ICON'.
+  GS_FCAT-ICON      = 'X'.
+  GS_FCAT-COLTEXT   = '요청 상태'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 승인 요청 상태
+
+  GS_FCAT-REF_TABLE = 'ZCA_EBAN'.
+  GS_FCAT-REF_FIELD = 'BANPR'.
+  GS_FCAT-FIELDNAME = 'BANPR'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  GS_FCAT-JUST      = 'C'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 승인 여부
+
+  GS_FCAT-REF_TABLE = 'ZCA_EBAN'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재코드
+
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재명
+
+  GS_FCAT-REF_TABLE = 'ZCA_EBAN'.
+  GS_FCAT-REF_FIELD = 'PRAMT'.
+  GS_FCAT-FIELDNAME = 'PRAMT'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매 요청량
+
+  GS_FCAT-REF_TABLE = 'ZCA_EBAN'.
+  GS_FCAT-REF_FIELD = 'MEINS'.
+  GS_FCAT-FIELDNAME = 'MEINS'.
+  GS_FCAT-COLTEXT   = '단위'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 단위
+
+  GS_FCAT-REF_TABLE = 'ZCA_EBAN'.
+  GS_FCAT-REF_FIELD = 'BADAT'.
+  GS_FCAT-FIELDNAME = 'BADAT'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 구매요청 일자
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SELECT_DATA .
+  DATA: BEGIN OF LS_MAKTX,
+          MATNR TYPE ZCA_MAKT-MATNR,
+          MAKTX TYPE ZCA_MAKT-MAKTX,
+        END OF LS_MAKTX,
+        LT_MAKTX LIKE TABLE OF LS_MAKTX.
+
+  SELECT MRPID
+         PLNUM
+         MATNR
+         STOCK
+         PLNQT
+         USEQT
+         RESQT
+         MEINS
+         MRPDT
+         BANFN
+    FROM ZCA_PPT030
+    INTO CORRESPONDING FIELDS OF TABLE GT_DISPLAY_PPT030
+    WHERE MRPID EQ ZCA_PPT030-MRPID
+    ORDER BY MATNR.
+
+  SELECT BANFN
+         MATNR
+         MRPID
+         WERKS
+         PRAMT
+         MEINS
+         BADAT
+         BANPR
+    FROM ZCA_EBAN
+    INTO CORRESPONDING FIELDS OF TABLE GT_DISPLAY_EBAN
+    WHERE MRPID EQ ZCA_PPT030-MRPID
+    ORDER BY MATNR.
+
+
+  SELECT MATNR,
+         MAKTX
+    FROM ZCA_MAKT
+    INTO TABLE @LT_MAKTX
+    WHERE SPRAS = '3'.
+
+
+  LOOP AT GT_DISPLAY_PPT030 ASSIGNING FIELD-SYMBOL(&lt;FS_PPT030&gt;).
+    READ TABLE LT_MAKTX INTO LS_MAKTX WITH KEY MATNR = &lt;FS_PPT030&gt;-MATNR.
+    &lt;FS_PPT030&gt;-MAKTX = LS_MAKTX-MAKTX.
+  ENDLOOP.
+
+  LOOP AT GT_DISPLAY_EBAN ASSIGNING FIELD-SYMBOL(&lt;FS_EBAN&gt;).
+    READ TABLE LT_MAKTX INTO LS_MAKTX WITH KEY MATNR = &lt;FS_EBAN&gt;-MATNR.
+    &lt;FS_EBAN&gt;-MAKTX = LS_MAKTX-MAKTX.
+
+    CASE &lt;FS_EBAN&gt;-BANPR.
+      WHEN 'A'. " 승인
+        &lt;FS_EBAN&gt;-STATUS_ICON = '@5B@'.
+      WHEN 'W'. " 대기
+        &lt;FS_EBAN&gt;-STATUS_ICON = '@5D@'.
+      WHEN 'D'. " 반려
+        &lt;FS_EBAN&gt;-STATUS_ICON = '@5C@'.
+    ENDCASE.
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form INPUT_CHECK_PLANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM INPUT_CHECK_PLANT .
+
+  SELECT SINGLE PTYPE, PNAME
+    FROM ZCA_T001W
+    INTO @DATA(LS_CHECK)
+    WHERE WERKS EQ @PA_PLANT.
+
+  IF LS_CHECK-PTYPE NE 'PROD'.
+    MESSAGE E160. "생산공장을 선택해주세요.
+  ELSE.
+    GV_TITLE_SCR100 = |[PP][{ LS_CHECK-PNAME }-{ PA_PLANT }] MRP 조회 프로그램|.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_VARIANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_VARIANT USING LV_HANDLE TYPE I.
+
+  CLEAR GS_VARIANT.
+  GS_VARIANT-REPORT = SY-CPROG.
+  GS_VARIANT-HANDLE = LV_HANDLE.
+  GV_SAVE = 'A'.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

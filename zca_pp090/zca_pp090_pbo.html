@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP090_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP090_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP090_PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP090_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS '0100'.
+  SET TITLEBAR '0100'.
+
+<font color ="#0000FF">*  DATA lv_pname TYPE zca_pps060-pname.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  " MEMORY 초기화 어케함 ㅅㅂ</font>
+<font color ="#0000FF">**  SET PARAMETER ID 'ZPN' FIELD lv_pname.</font>
+<font color ="#0000FF">*  GET PARAMETER ID 'ZPN' FIELD lv_pname.</font>
+<font color ="#0000FF">**  BREAK-POINT.</font>
+<font color ="#0000FF">**  SET PARAMETER ID 'ZPN' FIELD SPACE.</font>
+<font color ="#0000FF">*  zca_pps060-pname = lv_pname.</font>
+<font color ="#0000FF">*  CLEAR lv_pname.</font>
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv OUTPUT.
+  IF ( go_container_pl IS INITIAL AND go_container_po IS INITIAL ).
+    PERFORM create_object.
+    PERFORM display_alv.
+
+  ELSE.
+    PERFORM refresh_alv.
+
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

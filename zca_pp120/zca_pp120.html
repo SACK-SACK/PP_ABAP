@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP120</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP120</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [PP] 생산실적 입력</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_PP120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& 생산실적 입력 프로그램</font>
+<font color ="#0000FF">*& 개발자 : 양원기</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT ZCA_PP120 MESSAGE-ID ZCA_MSG.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 선언관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_pp120_top.html">ZCA_PP120_TOP</a>. " 전역변수 선언 등
+include <a href ="zca_pp120_scr.html">ZCA_PP120_SCR</a>. " 선택화면(Selection Screen) 생성
+include <a href ="zca_pp120_cls.html">ZCA_PP120_CLS</a>. " Local Class
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 구현관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_pp120_pbo.html">ZCA_PP120_PBO</a>. " PBO(Process Before Output) Module
+include <a href ="zca_pp120_pai.html">ZCA_PP120_PAI</a>. " PAI(Process After  Input ) Module
+include <a href ="zca_pp120_f01.html">ZCA_PP120_F01</a>. " FORM Subroutines
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+INITIALIZATION.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 오늘 이후의 날짜는 생산실적을 생성 할 일이 없지만,</font>
+<font color ="#0000FF">* 프로세스 상 차주 생산오더까지 생성되어있기때문에</font>
+<font color ="#0000FF">* 실행일 기준 주차의 다음주 까지 조회 가능하게 제한</font>
+SELECT SINGLE PTODATE
+  FROM ZCA_DATE
+  INTO GV_TODATE
+  WHERE PFROMDATE &lt;= SY-DATUM AND PTODATE &gt;= SY-DATUM.
+
+GV_TODATE += 7.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+AT SELECTION-SCREEN.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 플랜트 유형이 생산공장인지 검사</font>
+  PERFORM INPUT_CHECK_PLANT.
+<font color ="#0000FF">* 입력한 일자가 최대 검색 가능 일자를 넘었는지 검사</font>
+  PERFORM INPUT_CHECK_DATE.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+START-OF-SELECTION.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+  PERFORM CHECK_INIT_ODATE.
+  CALL SCREEN 0100.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 0100 --&gt; &</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* I00 저장</font>
+<font color ="#0000FF">* I01 변경내용을 저장하시겠습니까?</font>
+<font color ="#0000FF">* I02 저장안함</font>
+<font color ="#0000FF">* I03 생산 실적 입력 완료</font>
+<font color ="#0000FF">* I04 생산 실적 입력 필요</font>
+<font color ="#0000FF">* I05 생산 진행중</font>
+<font color ="#0000FF">* I06 생산 진행 대기</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* PA_ODATE D       .</font>
+<font color ="#0000FF">* PA_PLANT D       .</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   변경사항이 저장되었습니다</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*157   생산실적 생성중 오류가 발생했습니다.</font>
+<font color ="#0000FF">*158   생산실적이 성공적으로 입력되었습니다.</font>
+<font color ="#0000FF">*159   반제품 또는 완제품이 아닙니다.</font>
+<font color ="#0000FF">*160   생산공장을 선택해주세요.</font>
+<font color ="#0000FF">*161   차주 & 까지만 조회 할 수 있습니다.</font>
+<font color ="#0000FF">*162   현재 생산실적을 수정중입니다. DISPLAY 모드로 변경 후 이동해주세요.</font>
+<font color ="#0000FF">*163   생산실적 데이터에 오류가 있습니다.</font>
+<font color ="#0000FF">*164   폐기량은 생산량보다 많을 수 없습니다.</font>
+<font color ="#0000FF">*165   취소하셨습니다.</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

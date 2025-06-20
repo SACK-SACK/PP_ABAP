@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP010_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP010_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP010_PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP010_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0100 INPUT.
+  DATA lv_subrc TYPE sy-subrc.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'DISP'.
+      CASE sy-tcode.
+        WHEN 'ZCAPP010'.
+          PERFORM display_bom. "bom 조회프로그램으로 이동
+        WHEN 'ZCAPP011'.
+          PERFORM select_zca_stpo. "bom item 조회
+      ENDCASE.
+
+    WHEN 'SAVE' or 'CREA' or 'CHAN'.
+      CASE sy-tcode.
+        WHEN 'ZCAPP010'.
+          "bom item에 입력된 값 점검.
+          PERFORM check_value USING lv_subrc.
+
+          IF lv_subrc EQ 0.
+            "bom item 정보가 있으면  db table에 데이터가 저장된다.
+            PERFORM save_data.
+          ELSE.
+            MESSAGE '빈 라인은 삭제해주시고, 모든 BOM Item 정보를 작성해주세요.' TYPE 'S' DISPLAY LIKE 'E'.
+          ENDIF.
+
+        WHEN 'ZCAPP011'.
+          PERFORM updata_data.
+      ENDCASE.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      " 모든 입력필드 초기화
+      REFRESH gt_display.
+      CLEAR : zca_mara-matnr,
+              zca_makt-maktx,
+              zca_t001w-werks,
+              zca_t001w-pname,
+              zca_stko-bmein,
+              zca_stko-datuv,
+              zca_stko-vaild_to,
+             gs_display.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  SELECT_FIELD  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE select_field INPUT.
+  PERFORM select_screen_input.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  CHECK_VALUE  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE check_value INPUT.
+
+  CASE sy-tcode.
+    WHEN 'ZCAPP010'. "BOM 생성 TCODE
+
+<font color ="#0000FF">* 자재명, 자재유형 조회</font>
+      PERFORM select_screen_input.
+
+<font color ="#0000FF">* 생성할 자재코드에 대해 이미 생성된 BOM ID이 있는지 확인</font>
+      PERFORM check_for_bomid.
+
+      IF gv_lock IS  INITIAL.
+        PERFORM init_alv_line.
+      ELSE.
+        REFRESH gt_display.
+        CLEAR gs_display.
+      ENDIF.
+
+    WHEN 'ZCAPP011'. "BOM 변경 TCODE
+
+<font color ="#0000FF">* 자재코드 점검을 통해 생성한 BOM이 있는지 확인한다.</font>
+<font color ="#0000FF">* BOM 정보가 없으면 변경할 수 없다.</font>
+      PERFORM check_field_for_matnr.
+  ENDCASE.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

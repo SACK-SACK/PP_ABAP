@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP110_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP110_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP110_PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP110_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS '0100'.
+  SET TITLEBAR '0100'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_DYNNR OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_dynnr OUTPUT.
+  CASE tabstrip-activetab.
+    WHEN 'TAB1'.
+      dynnr = '0200'.
+    WHEN 'TAB2'.
+      dynnr = '0300'.
+    WHEN OTHERS.
+      tabstrip-activetab = 'TAB1'.
+      dynnr = '0200'.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_100 OUTPUT.
+  IF go_container_100 IS INITIAL.
+    PERFORM create_object.
+    PERFORM variant_100.
+    PERFORM layout_100.
+    PERFORM fieldcatalog_100.
+    PERFORM set_event_100.
+    PERFORM display_alv_100.
+  ELSE.
+    PERFORM refresh_alv_100.
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module DISPLAY_ICON OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE display_icon OUTPUT.
+  IF gt_display_200 IS INITIAL.
+    gs_icon-02 = '@5C@'.
+    gs_icon-03 = '@5C@'.
+    gs_icon-05 = '@5C@'.
+    EXIT.
+  ENDIF.
+
+  CLEAR : gs_display_100.
+  LOOP AT gt_display_100 INTO gs_display_100.
+
+    CLEAR gs_aufk.
+    READ TABLE gt_aufk INTO gs_aufk WITH KEY matnr = gs_display_100-matnr.
+    IF gs_aufk-phas3 EQ 'X'.
+      gs_icon-05 = '@5B@'.
+    ELSE.
+      gs_icon-05 = '@5D@'.
+    ENDIF.
+  ENDLOOP.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_200 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_200 OUTPUT.
+  IF go_container_200 IS INITIAL.
+
+    CREATE OBJECT go_container_200
+      EXPORTING
+        container_name = 'CCON2'.
+
+    "생산시작 alv
+    CREATE OBJECT go_alv_grid_200
+      EXPORTING
+        i_parent = go_container_200.
+
+    PERFORM layout_200.
+    PERFORM variant_200.
+    PERFORM fieldcatalog_200.
+    PERFORM handle_event_200.
+    PERFORM display_alv_200.
+  ELSE.
+    PERFORM refresh_alv_200.
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0110 OUTPUT.
+  SET PF-STATUS '0110'.
+  SET TITLEBAR '0110'.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP050</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP050</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [PP] 생산계획 생성</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_PP050</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& 생산계획 생성 프로그램</font>
+<font color ="#0000FF">*& 개발자 : 양원기</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT ZCA_PP050 MESSAGE-ID ZCA_MSG.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 선언관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_pp050_top.html">ZCA_PP050_TOP</a>. " 전역변수 선언 등
+include <a href ="zca_pp050_scr.html">ZCA_PP050_SCR</a>. " Selection Screen
+include <a href ="zca_pp050_cls.html">ZCA_PP050_CLS</a>. " Local Class 정의 / 구현
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 구현관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_pp050_pbo.html">ZCA_PP050_PBO</a>. " PBO(Process Before Output) Module
+include <a href ="zca_pp050_pai.html">ZCA_PP050_PAI</a>. " PAI(Process After  Input ) Module
+include <a href ="zca_pp050_f01.html">ZCA_PP050_F01</a>. " FORM Subroutines
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+INITIALIZATION.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+AT SELECTION-SCREEN.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+PERFORM INPUT_CHECK_PLANT.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+START-OF-SELECTION.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CALL SCREEN 0100.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 0100 --&gt; &</font>
+<font color ="#0000FF">* 0100 --&gt; &</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* T00 아니오</font>
+<font color ="#0000FF">* T01 예</font>
+<font color ="#0000FF">* T02 아니오</font>
+<font color ="#0000FF">* T03 생산계획 생성</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* PA_PLANT D       .</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*150   &년 &월 &주 납기정보입니다.</font>
+<font color ="#0000FF">*151   생산계획 생성을 취소하였습니다.</font>
+<font color ="#0000FF">*160   생산공장을 선택해주세요.</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

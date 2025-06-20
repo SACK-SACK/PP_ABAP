@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP030_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP030_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP030_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP030_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES : zca_plko,
+         zca_t001w,
+         zca_mara,
+         zca_makt.
+
+DATA ok_code TYPE sy-ucomm.
+DATA gv_plnnr TYPE zca_plnnr.
+
+<font color ="#0000FF">*라우팅 헤더 변수</font>
+DATA : gs_plko TYPE zca_plko,
+       gt_plko TYPE TABLE OF zca_plko.
+
+<font color ="#0000FF">*라우팅 아이템 변수</font>
+
+DATA : BEGIN OF gs_plpo.
+         include structure <a href ="zca_plpo/dictionary-zca_plpo.html">zca_plpo</a>.
+DATA :   wname TYPE zca_crhd-wname,
+       END OF gs_plpo.
+DATA   gt_plpo LIKE TABLE OF gs_plpo.
+
+
+<font color ="#0000FF">*alv</font>
+
+DATA : go_docking_container TYPE REF TO cl_gui_docking_container,
+       go_splitter          TYPE REF TO cl_gui_splitter_container,
+       go_container_l       TYPE REF TO cl_gui_container,
+       go_container_r       TYPE REF TO cl_gui_container,
+       go_alv_grid_l        TYPE REF TO cl_gui_alv_grid,
+       go_alv_grid_r        TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA gs_layout  TYPE lvc_s_layo.
+DATA gs_variant TYPE disvariant.
+DATA gv_save    TYPE c.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA gt_fieldcat TYPE lvc_t_fcat.
+DATA gs_fieldcat TYPE lvc_s_fcat.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

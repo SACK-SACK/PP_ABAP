@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP100_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP100_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP130_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_layo .
+  CLEAR gs_layo.
+  gs_layo-sel_mode = 'D'.       " 복수행 선택 + 행선택 컬럼 생성 + ANY 셀 선택 가능
+  gs_layo-zebra = 'X'.
+  gs_layo-cwidth_opt = 'X'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data .
+  SELECT *
+    FROM zca_aufk
+    INTO TABLE gt_display
+     WHERE loekz EQ space
+       AND werks EQ p_werks
+       AND plnum EQ p_plnum.
+  .
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form remove_timestemp</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM remove_timestemp  TABLES pt_fcat STRUCTURE lvc_s_fcat
+                       USING p_fieldname.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = p_fieldname.
+  gs_fcat-no_out    = abap_on.
+  APPEND gs_fcat TO pt_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_variant</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_variant .
+  CLEAR gs_variant.
+  gs_variant-report = sy-cprog.
+  gv_save = 'A'.
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

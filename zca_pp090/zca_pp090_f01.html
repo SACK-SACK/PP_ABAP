@@ -1,0 +1,689 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP090_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP090_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP090_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">**&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP090_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object .
+  CREATE OBJECT go_container_pl
+    EXPORTING
+      container_name = 'CCON01'.
+
+  CREATE OBJECT go_container_po
+    EXPORTING
+      container_name = 'CCON02'.
+
+  "생산계획 alv
+  CREATE OBJECT go_alv_grid_pl
+    EXPORTING
+      i_parent = go_container_pl.
+
+  "생산오더 alv
+  CREATE OBJECT go_alv_grid_po
+    EXPORTING
+      i_parent = go_container_po.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv .
+  PERFORM variant_pl.
+  PERFORM layout_pl.
+  PERFORM fieldcat_pl.
+  CALL METHOD go_alv_grid_pl-&gt;set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZCA_PPS010'
+      is_variant       = gs_variant
+      i_save           = gv_save
+<font color ="#0000FF">*     i_default        = 'X'</font>
+      is_layout        = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab        = gt_display_pl
+      it_fieldcatalog  = gt_fieldcat.
+
+  PERFORM variant_po.
+  PERFORM layout_po.
+  PERFORM fieldcat_po.
+  CALL METHOD go_alv_grid_po-&gt;set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZCA_PPS020'
+      is_variant       = gs_variant
+      i_save           = gv_save
+<font color ="#0000FF">*     i_default        = 'X'</font>
+      is_layout        = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab        = gt_display_po
+      it_fieldcatalog  = gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_production_plan_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_production_plan_data .
+  REFRESH gt_display_pl.
+
+  SELECT
+   a~plnum
+   a~pyear
+   a~pmonth
+   a~pweek
+   a~plwrk
+   a~psttr
+   a~pedtr
+   a~ppsts
+   b~matnr
+   b~gsmng
+   b~meins
+   c~maktx
+   FROM zca_ppt010 AS a
+    INNER JOIN zca_ppt020 AS b
+       ON a~plnum EQ b~plnum
+    INNER JOIN zca_makt AS c
+      ON  b~matnr EQ c~matnr
+   INTO CORRESPONDING FIELDS OF TABLE gt_display_pl
+    WHERE a~plnum  EQ zca_pps060-plnum
+      AND a~pyear  EQ zca_pps060-pyear
+      AND a~pmonth EQ zca_pps060-pmonth
+      AND a~pweek  EQ zca_pps060-pweek
+      AND a~plwrk  EQ zca_pps060-werks
+      AND c~spras  EQ '3'.
+
+
+
+  IF sy-subrc NE 0.
+    MESSAGE s100 DISPLAY LIKE 'E'.
+    CLEAR gs_layout.
+    gs_layout-grid_title = '생산오더'.
+
+    CALL METHOD go_alv_grid_po-&gt;set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZCA_PPS020'
+        is_variant       = gs_variant
+        i_save           = gv_save
+<font color ="#0000FF">*       i_default        = 'X'</font>
+        is_layout        = gs_layout
+<font color ="#0000FF">*       it_toolbar_excluding = gt_toolbar</font>
+      CHANGING
+        it_outtab        = gt_display_po
+        it_fieldcatalog  = gt_fieldcat.
+  ELSE.
+    READ TABLE gt_display_pl INTO gs_display_pl WITH KEY ppsts = 'A'.
+
+    IF sy-subrc EQ 0.
+      "생산오더 데이터 조회
+      PERFORM select_production_order_data.
+    ELSE.
+      REFRESH: gt_display_pl.
+      CLEAR : gs_display_pl.
+      MESSAGE s119 DISPLAY LIKE 'E'.
+    ENDIF.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_alv</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_alv .
+  CALL METHOD go_alv_grid_pl-&gt;refresh_table_display.
+  CALL METHOD go_alv_grid_po-&gt;refresh_table_display.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form layout_pl</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM layout_pl .
+  CLEAR gs_layout.
+  gs_layout-sel_mode = 'D'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fieldcat_pl</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fieldcat_pl .
+  REFRESH gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'ICON'. "아이콘
+  gs_fieldcat-icon      = abap_on.
+  gs_fieldcat-coltext   = '오더전환 여부'.
+  gs_fieldcat-outputlen = 9.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PLNUM'. "생산계획ID
+  gs_fieldcat-key       = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PYEAR'.
+  gs_fieldcat-outputlen = 4.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PWEEK'.
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PLWRK'. "플랜트 ID
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MATNR'.
+  gs_fieldcat-outputlen = 12.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-outputlen = 20.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname  = 'GSMNG'.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  gs_fieldcat-coltext    = '계획 수량'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-outputlen = 3.
+  gs_fieldcat-coltext   = '단위'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fieldcat_po</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fieldcat_po .
+  REFRESH gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'ICON'.
+  gs_fieldcat-no_out    = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'AUFNR'. "생산오더ID
+  gs_fieldcat-key       = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PWEEK'. "주차
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MATNR'.
+  gs_fieldcat-outputlen = 12.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-outputlen = 20.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname  = 'GAMNG'.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  gs_fieldcat-coltext    = '오더 수량'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-outputlen = 3.
+  gs_fieldcat-coltext   = '단위'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'WERKS'. "플랜트 ID
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PNAME'. "플랜트명
+  gs_fieldcat-outputlen = 10.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_po</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_po .
+  DATA lv_answer TYPE c.
+  DATA lv_aufnr  TYPE zca_aufnr.
+  DATA lv_subrc TYPE sy-subrc.
+
+  CALL METHOD go_alv_grid_pl-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  IF gt_rows IS NOT INITIAL.
+    LOOP AT gt_rows INTO gs_row.
+      READ TABLE gt_display_pl INTO gs_display_pl INDEX gs_row-index.
+
+      IF gs_display_pl-icon EQ icon_led_green.
+        CLEAR : lv_subrc.
+        lv_subrc = 4.
+        MESSAGE e108.
+      ENDIF.
+
+    ENDLOOP.
+
+  ELSE.
+    CLEAR : lv_subrc.
+    lv_subrc = 4.
+    MESSAGE e105.
+  ENDIF.
+
+  IF lv_subrc EQ 0.
+    "생산오더 전환 여부를 확인하기 위한 팝업 메시지
+    PERFORM pop_up_message CHANGING lv_answer.
+  ENDIF.
+
+  "메시지 팝업에서 '네' 를 선택하면 po 생성 진행
+  IF lv_answer EQ '1'.
+
+    REFRESH gt_display_po.
+    CLEAR gs_display_po.
+    " 선택된 생산계획이 있으면 po 데이터 생성
+    LOOP AT gt_rows INTO gs_row.
+      READ TABLE gt_display_pl INTO gs_display_pl INDEX gs_row-index.
+
+      IF sy-subrc EQ 0.
+        "생산오더 정보 생성
+        PERFORM create_po_data.
+        SORT gt_display_po BY psday.
+
+        LOOP AT gt_display_po INTO gs_display_po.
+          "생산오더 ID 생성
+          PERFORM create_aufnr USING lv_aufnr.
+
+          "생산오더 데이터 생성 후 생산오더 ALV 업데이트
+          MODIFY gt_display_po FROM gs_display_po TRANSPORTING aufnr.
+
+        ENDLOOP.
+      ENDIF.
+    ENDLOOP.
+
+    " [ZCA_AUFK : 생산오더 테이블] 생산오더 데이터 저장
+    PERFORM save_po_data.
+  ELSE.
+    "팝업메시지 취소를 클릭하면 메시지 출력
+    MESSAGE s103 DISPLAY LIKE 'I'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form pop_up_message</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM pop_up_message  CHANGING pv_answer.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = '생산오더 전환'(l01)
+      text_question         = '생산오더로 전환 하시겠습니까?'(l02)
+      text_button_1         = '네'(l03)
+      text_button_2         = '아니요'(l04)
+      default_button        = '1'
+      display_cancel_button = space
+    IMPORTING
+      answer                = pv_answer.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_po_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_po_data .
+  DATA lv_aufnr TYPE zca_aufnr.
+  DATA lv_bom TYPE zca_stlnr.
+
+  "BOM ID 가져오기
+  READ TABLE gt_bom INTO DATA(ls_bom) WITH KEY matnr = gs_display_pl-matnr.
+  gs_display_po-stlnr = ls_bom-stlnr.
+
+  "라우팅 ID 가져오기
+  READ TABLE gt_routing INTO DATA(ls_routing) WITH KEY matnr = gs_display_pl-matnr.
+  gs_display_po-plnnr = ls_routing-plnnr.
+
+  "플랜트 ID & 플랜트명 가져오기
+  READ TABLE gt_plant INTO DATA(ls_plant) WITH KEY werks = zca_pps060-werks.
+  gs_display_po-werks = zca_pps060-werks.
+  gs_display_po-pname = ls_plant-pname.
+
+  DO 7 TIMES.
+    MOVE-CORRESPONDING gs_display_pl TO gs_display_po.
+
+    "po 수량 생성 - 생산계획 총 수량에서 7을 나눠 자재별 일일분 생산 수량 생성
+    gs_display_po-gamng = gs_display_pl-gsmng / 7.
+    IF gs_display_po-meins EQ 'EA' AND
+       gs_display_po-gamng MOD 2 NE 0.  "홀수면 +1
+      gs_display_po-gamng  = gs_display_po-gamng + 1.
+    ENDIF.
+
+    gs_display_po-meins = gs_display_pl-meins. "수량 단위   생성
+    gs_display_po-psday = gs_display_pl-psttr. "생산 시작일 생성
+    gs_display_po-peday = gs_display_po-psday. "생산 종료일 생성
+    gs_display_po-posts = 'A'.                 "생산 오더 승인 상태
+    APPEND gs_display_po TO gt_display_po.
+
+    gs_display_pl-psttr = gs_display_pl-psttr + 1.
+  ENDDO.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_aufnr</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_aufnr  USING pv_aufnr TYPE zca_aufnr.
+  "생산오더ID 생성 함수
+  call function <a href ="zca_pp_get_aufnr/zca_pp_get_aufnr.html">'ZCA_PP_GET_AUFNR'</a>
+    IMPORTING
+      e_aufnr = pv_aufnr.
+
+  gs_display_po-aufnr = pv_aufnr.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data .
+  "bom id 조회
+  PERFORM select_bom_id USING gt_bom.
+  "라우팅 id 조회
+  PERFORM select_routing_id USING gt_routing.
+  " 플랜트명 조회
+  PERFORM select_plant_name USING gt_plant.
+  "자재명 조회
+  PERFORM select_matnr_name USING gt_maktx.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_bom_id</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_bom_id  USING pt_bom LIKE gt_bom.
+  REFRESH pt_bom.
+  SELECT
+   stlnr
+    matnr
+    FROM zca_stko
+    INTO CORRESPONDING FIELDS OF TABLE pt_bom.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_routing_id</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_routing_id  USING pt_routing LIKE gt_routing.
+  REFRESH pt_routing.
+  SELECT
+    plnnr
+    matnr
+    FROM zca_plko
+    INTO CORRESPONDING FIELDS OF TABLE pt_routing.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_plant_name</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_plant_name  USING pt_plant LIKE gt_plant.
+  REFRESH pt_plant.
+  SELECT
+    werks
+    pname
+    FROM zca_t001w
+    INTO CORRESPONDING FIELDS OF TABLE pt_plant.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_po_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_po_data .
+  DATA ls_zca_aufk TYPE zca_aufk.
+
+  LOOP AT gt_display_po INTO gs_display_po.
+
+    MOVE-CORRESPONDING gs_display_po TO ls_zca_aufk.
+    ls_zca_aufk-erdat = sy-datum.
+    ls_zca_aufk-erzet = sy-uzeit.
+    ls_zca_aufk-ernam = sy-uname.
+    INSERT zca_aufk FROM ls_zca_aufk.
+  ENDLOOP.
+
+  IF sy-subrc EQ 0.
+    COMMIT WORK.
+    "저장 성공 메시지
+    MESSAGE s106.
+
+    "DB에 데이터 저장이 완료되면, 생산계획 ALV '오더 전환 여부' 필드 (Green)아이콘 업데이트
+    LOOP AT gt_display_pl INTO gs_display_pl.
+      READ TABLE gt_display_po INTO gs_display_po WITH KEY plnum = gs_display_pl-plnum
+                                                           matnr = gs_display_pl-matnr.
+
+      IF sy-subrc EQ 0.
+        gs_display_pl-icon = icon_led_green.
+        MODIFY gt_display_pl FROM gs_display_pl TRANSPORTING icon.
+      ENDIF.
+
+    ENDLOOP.
+
+    " 생산오더 ALV 인터널 테이블의 라인 수를 읽어서 생성된 건수 표시
+    DESCRIBE TABLE gt_display_po LINES gv_lines.
+    PERFORM display_alv.
+  ELSE.
+    ROLLBACK WORK.
+    "저장 실패 메시지
+    MESSAGE e107.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_production_order_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_production_order_data .
+
+  REFRESH gt_display_po.
+  CLEAR gs_display_po.
+
+  SELECT
+    aufnr
+    plnum
+    pweek
+    psday
+    peday
+    gamng
+    meins
+    matnr
+    stlnr
+    plnnr
+    werks
+    FROM zca_aufk
+    INTO CORRESPONDING FIELDS OF TABLE gt_display_po
+    WHERE plnum EQ zca_pps060-plnum
+      AND werks EQ zca_pps060-werks.
+
+  SORT gt_display_po BY aufnr.
+
+  IF sy-subrc EQ 0.
+    LOOP AT gt_display_po INTO gs_display_po.
+      READ TABLE gt_maktx INTO DATA(ls_maktx) WITH KEY matnr = gs_display_po-matnr.
+      gs_display_po-maktx =  ls_maktx-maktx.
+
+      READ TABLE gt_plant INTO DATA(ls_plant) WITH KEY werks = gs_display_po-werks.
+      gs_display_po-pname = ls_plant-pname.
+
+      MODIFY gt_display_po FROM gs_display_po.
+    ENDLOOP.
+
+    DESCRIBE TABLE gt_display_po LINES gv_lines.
+  ENDIF.
+
+<font color ="#0000FF">*  PERFORM display_alv.</font>
+  PERFORM layout_po.
+  PERFORM fieldcat_po.
+  CALL METHOD go_alv_grid_po-&gt;set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZCA_PPS020'
+      is_variant       = gs_variant
+      i_save           = gv_save
+<font color ="#0000FF">*     i_default        = 'X'</font>
+      is_layout        = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab        = gt_display_po
+      it_fieldcatalog  = gt_fieldcat.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form pl_check_po</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM pl_check_po .
+  LOOP AT gt_display_pl INTO gs_display_pl.
+    READ TABLE gt_display_po INTO gs_display_po WITH KEY plnum = gs_display_pl-plnum
+                                                         matnr = gs_display_pl-matnr.
+
+
+    IF sy-subrc EQ 0.
+      gs_display_pl-icon = icon_led_green.
+    ELSE.
+      gs_display_pl-icon = icon_led_yellow.
+    ENDIF.
+
+    MODIFY gt_display_pl FROM gs_display_pl TRANSPORTING icon.
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form layout_po</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM layout_po .
+  CASE ok_code.
+    WHEN ' '.
+      CLEAR gs_layout.
+      gs_layout-grid_title = '생산오더'.
+
+    WHEN 'DISP' OR 'CREA'.
+      CLEAR gs_layout.
+      gs_layout-grid_title = '생산오더' && zca_pps060-pmonth && '월' && zca_pps060-pweek && '주차' &&
+                             ':' && gv_lines && '건'.
+
+      IF gt_display_po IS INITIAL.
+        gs_layout-grid_title = '생산오더'.
+      ENDIF.
+  ENDCASE.
+
+  gs_layout-sel_mode   = 'D'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_aufnr_test</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_aufnr_test  USING pv_aufnr TYPE zca_aufnr.
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '01'
+      object      = 'ZCA_TEST01'
+    IMPORTING
+      number      = pv_aufnr.
+
+  pv_aufnr = 'PO' && pv_aufnr.
+  gs_display_po-aufnr = pv_aufnr.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_unit</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_unit  USING pv_qty
+                  VALUE(pv_matnr).
+
+  SELECT SINGLE
+    meins
+    FROM zca_mara
+    INTO pv_qty
+    WHERE matnr EQ pv_matnr.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form variant_pl</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM variant_pl .
+  CLEAR gs_variant.
+  gs_variant-report = sy-cprog.
+  gs_variant-handle = '0001'.
+  gv_save = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form variant_po</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM variant_po .
+  CLEAR gs_variant.
+  gs_variant-report = sy-cprog.
+  gs_variant-handle = '0002'.
+  gv_save = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_matnr_name</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_matnr_name  USING pt_maktx LIKE gt_maktx.
+  SELECT
+    matnr
+    maktx
+    FROM zca_makt
+    INTO CORRESPONDING FIELDS OF TABLE pt_maktx
+    WHERE spras EQ '3'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_po_test</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_po_test .
+  DATA lv_answer TYPE c.
+  DATA lv_aufnr  TYPE zca_aufnr.
+  DATA lv_subrc TYPE sy-subrc.
+
+
+  "생산오더 전환 여부를 확인하기 위한 팝업 메시지
+  PERFORM pop_up_message CHANGING lv_answer.
+
+  IF lv_answer EQ '1'.
+    REFRESH gt_display_po.
+    CLEAR gs_display_po.
+
+    PERFORM create_po_data.
+    SORT gt_display_po BY psday.
+
+    LOOP AT gt_display_po INTO gs_display_po.
+      "생산오더 ID 생성
+<font color ="#0000FF">*      PERFORM create_aufnr USING lv_aufnr.</font>
+
+      "생산오더 ID 테스트 버전
+      PERFORM create_aufnr_test USING lv_aufnr.
+      MODIFY gt_display_po FROM gs_display_po TRANSPORTING aufnr.
+    ENDLOOP.
+
+<font color ="#0000FF">*    PERFORM save_po_data.</font>
+  ELSE.
+    "팝업메시지 취소를 클릭하면 메시지 출력
+    MESSAGE s103 DISPLAY LIKE 'I'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_gamng</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_gamng  USING pv_qty_q
+                   VALUE(pv_matnr).
+
+  CLEAR gs_display_po.
+
+  READ TABLE gt_display_po INTO gs_display_po WITH KEY matnr = pv_matnr.
+  pv_qty_q = gs_display_po-gamng.
+  CLEAR pv_matnr.
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

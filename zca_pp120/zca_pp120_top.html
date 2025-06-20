@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP120_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP120_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP120_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CONTROLS: MY_TABSTRIP TYPE TABSTRIP.
+
+<font color ="#0000FF">* 사용자 입력 펑션코드 받을 변수</font>
+DATA OK_CODE TYPE SY-UCOMM.
+<font color ="#0000FF">* 화면 제어 변수</font>
+DATA DYNNR TYPE SY-DYNNR VALUE '0200'.
+
+<font color ="#0000FF">* Parameter & Screen Input Field</font>
+DATA GV_ORDER_DATE     TYPE ZCA_AUFK-PSDAY.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Screen 0100</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA: GO_CONTAINER TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+      GO_ALV_GRID  TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA GS_DATE     TYPE ZCA_DATE.
+
+<font color ="#0000FF">* Tabstrip Titles</font>
+DATA: TITLE_TAB1 TYPE C LENGTH 40,
+      TITLE_TAB2 TYPE C LENGTH 40,
+      TITLE_TAB3 TYPE C LENGTH 40,
+      TITLE_TAB4 TYPE C LENGTH 40,
+      TITLE_TAB5 TYPE C LENGTH 40,
+      TITLE_TAB6 TYPE C LENGTH 40,
+      TITLE_TAB7 TYPE C LENGTH 40.
+
+DATA: BEGIN OF GS_DISPLAY,
+        AUFNR       TYPE ZCA_AUFK-AUFNR,  " 생산오더 ID
+        PLNUM       TYPE ZCA_AUFK-PLNUM,  " 생산계획 ID
+        MATNR       TYPE ZCA_AUFK-MATNR,  " 자재코드
+        MAKTX       TYPE ZCA_MAKT-MAKTX,  " MAKTX 자재명
+        GAMNG       TYPE ZCA_AUFK-GAMNG,  " 생산 오더 수량
+        MEINS       TYPE ZCA_AUFK-MEINS,  " 자재 수량 단위
+        STLNR       TYPE ZCA_AUFK-STLNR,  " BOM ID
+        WERKS       TYPE ZCA_AUFK-WERKS,  " 플랜트 ID
+        PNAME       TYPE ZCA_T001W-PNAME, " PNAME  플랜트명
+        PLNNR       TYPE ZCA_AUFK-PLNNR,  " 공정 ID
+        LTXA1       TYPE ZCA_PLKO-LTXA1,  " LTXA1 공정명
+        PHAS1       TYPE ZCA_AUFK-PHAS1,  " 생산오더 시작단계
+        PHAS2       TYPE ZCA_AUFK-PHAS2,  " 생산오더 완료단계
+        PHAS3       TYPE ZCA_AUFK-PHAS3,  " 생산오더 마감단계
+        STATUS_TEXT TYPE STRING,          " 상태 TEXT
+        STATUS_ICON TYPE ICON-ID,         " 상태 ICON
+        COLOR       TYPE LVC_T_SCOL,
+      END OF GS_DISPLAY,
+      GT_DISPLAY LIKE TABLE OF GS_DISPLAY.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA GT_FCAT TYPE LVC_T_FCAT.
+DATA GS_FCAT TYPE LVC_S_FCAT.
+<font color ="#0000FF">* ALV Layout</font>
+DATA GS_LAYO_0100 TYPE LVC_S_LAYO.
+
+DATA: GV_TODATE          TYPE ZCA_DATE-PTODATE,
+      GV_CHECK_DATE_FLAG TYPE C.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Screen 0110</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+TABLES: ZCA_AFRU.
+DATA: GO_CONTAINER_0110 TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+      GO_ALV_GRID_0110  TYPE REF TO CL_GUI_ALV_GRID.
+
+DATA: BEGIN OF GS_DIALOG_DISPLAY,
+        AUFNR       TYPE ZCA_AUFK-AUFNR,  " 생산오더 ID
+        STLNR       TYPE ZCA_AUFK-STLNR,  " BOM ID
+        MATNR       TYPE ZCA_AUFK-MATNR,  " 자재코드
+        MAKTX       TYPE ZCA_MAKT-MAKTX,  " MAKTX 자재명
+        RUECK       TYPE ZCA_AFRU-RUECK,  " 생산실적 ID
+        GAMNG       TYPE ZCA_AUFK-GAMNG,  " 생산 오더 수량
+        MEINS       TYPE ZCA_AUFK-MEINS,  " 수량 단위
+        PSDAY       TYPE ZCA_AUFK-PSDAY,  " 생산일자
+        STATUS_TEXT TYPE STRING,          " 상태 TEXT
+        STATUS_ICON TYPE ICON-ID,         " 상태 ICON
+        ROW_COLOR   TYPE CHAR4,           " 행 색상 컬럼
+      END OF GS_DIALOG_DISPLAY,
+      GT_DIALOG_DISPLAY LIKE TABLE OF GS_DIALOG_DISPLAY.
+
+DATA: GV_SAVE_FLAG     TYPE C, " 데이터 저장이 일어났을 때 플래그
+      GV_CHANGE_FLAG   TYPE C,
+      GV_INDEX_TMP     TYPE I,
+      GV_MAKTX_0110    TYPE ZCA_MAKT-MAKTX,
+      GV_MEINS1_0110   TYPE ZCA_AUFK-MEINS,
+      GV_MEINS2_0110   TYPE ZCA_AUFK-MEINS,
+      GV_MEINS3_0110   TYPE ZCA_AUFK-MEINS,
+      GV_SCREEN_FLAG   TYPE C,
+      GV_POSSIBLE_SAVE TYPE C.
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA GS_LAYO_0110 TYPE LVC_S_LAYO.
+
+
+DATA GV_TITLE_SCR100 TYPE STRING.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

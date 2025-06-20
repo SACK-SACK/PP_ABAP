@@ -1,0 +1,1072 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP120_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP120_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP120_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_TAB_TITLE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_TAB_TITLE .
+  FIELD-SYMBOLS &lt;FS&gt; TYPE C.
+  DATA: LV_FIELD_NAME TYPE STRING,
+        LV_ICON       TYPE STRING.
+
+<font color ="#0000FF">* DO 반복문을 7번 (월,화,수,목,금,토,일) 돌게 만들어서 INDEX가 1~7 까지 나오게 한다.</font>
+<font color ="#0000FF">* Field Symbol과 Pipe문법을 활용하여 Tab 제목 변수이름을 동적으로 할당한다. EX) TITLE_TAB1, TITLE_TAB2, ...</font>
+<font color ="#0000FF">* Subroutine을 재활용하여 탭별로 아이콘을 적용시킨다.</font>
+
+<font color ="#0000FF">* Parameter로 받은 날짜나, Input Field로 받은 날짜가 없을 때 모든 탭을 'X' 아이콘으로 설정한다.</font>
+  IF GV_ORDER_DATE IS INITIAL.
+    DO 7 TIMES.
+      LV_FIELD_NAME = |TITLE_TAB{ SY-INDEX }|.
+      ASSIGN (LV_FIELD_NAME) TO &lt;FS&gt;.
+
+      CASE SY-INDEX.
+        WHEN 1.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '월요일 : '.
+        WHEN 2.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '화요일 : '.
+        WHEN 3.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '수요일 : '.
+        WHEN 4.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '목요일 : '.
+        WHEN 5.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '금요일 : '.
+        WHEN 6.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '토요일 : '.
+        WHEN 7.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                'ICON_NO_STATUS'
+                                                '일요일 : '.
+      ENDCASE.
+
+      UNASSIGN &lt;FS&gt;.
+    ENDDO.
+
+<font color ="#0000FF">* Parameter로 받은 날짜나, Input Field로 받은 날짜가 있을 때</font>
+<font color ="#0000FF">* 입력받은 날짜가 해당하는 년, 월, 주차, 주차 시작일을 구하고</font>
+<font color ="#0000FF">* 반복문 7번 돌 동안 1씩 더하여 Tab Title에 알맞은 날짜를 구해온다.</font>
+<font color ="#0000FF">* 구해온 날짜를 활용하여 'CHECK_PRODUCTION_PLAN' 을 통해 생산오더 진행현황을 검색하고</font>
+<font color ="#0000FF">* 상태에 맞는 Tab Icon을 적용시킨다</font>
+  ELSE.
+
+    SELECT SINGLE *
+      FROM ZCA_DATE
+      INTO @GS_DATE
+      WHERE PFROMDATE &lt;= @GV_ORDER_DATE
+        AND PTODATE &gt;= @GV_ORDER_DATE.
+
+    DATA(LV_START_DATE) = GS_DATE-PFROMDATE.
+
+
+    DO 7 TIMES.
+      LV_FIELD_NAME = |TITLE_TAB{ SY-INDEX }|.
+      ASSIGN (LV_FIELD_NAME) TO &lt;FS&gt;.
+      DATA LV_TEXT TYPE STRING.
+
+      CASE SY-INDEX.
+        WHEN 1.
+          LV_TEXT = |월요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+        WHEN 2.
+          LV_TEXT = |화요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+        WHEN 3.
+          LV_TEXT = |수요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+        WHEN 4.
+          LV_TEXT = |목요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+        WHEN 5.
+          LV_TEXT = |금요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+        WHEN 6.
+          LV_TEXT = |토요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+        WHEN 7.
+          LV_TEXT = |일요일 : { LV_START_DATE+4(2) }월{ LV_START_DATE+6(2) }일|.
+          PERFORM CHECK_PRODUCTION_PLAN USING    LV_START_DATE
+                                        CHANGING LV_ICON.
+          PERFORM SET_TAB_TITLE_WITH_ICON USING &lt;FS&gt;
+                                                LV_ICON
+                                                LV_TEXT.
+
+      ENDCASE.
+
+      CLEAR LV_ICON.
+      LV_START_DATE += 1.
+      UNASSIGN &lt;FS&gt;.
+
+
+    ENDDO.
+
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_TAB_TITLE_WITH_ICON</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_TAB_TITLE_WITH_ICON  USING    PFS_TAB_TITLE
+                                       VALUE(PV_ICON)
+                                       VALUE(PV_TEXT).
+  CALL FUNCTION 'ICON_CREATE'
+    EXPORTING
+      NAME   = PV_ICON
+      TEXT   = PV_TEXT
+    IMPORTING
+      RESULT = PFS_TAB_TITLE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CHECK_PRODUCTION_PLAN</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CHECK_PRODUCTION_PLAN  USING    PV_DATE TYPE ZCA_AUFK-PSDAY
+                            CHANGING PV_ICON.
+
+  SELECT PHAS1,
+         PHAS2,
+         PHAS3
+    FROM ZCA_AUFK
+    INTO TABLE @DATA(LT_AUFK_STATUS)
+    WHERE PSDAY EQ @PV_DATE.
+
+  IF SY-SUBRC EQ 0.
+
+    READ TABLE LT_AUFK_STATUS WITH KEY PHAS2 = ABAP_ON
+                                       PHAS3 = ABAP_OFF TRANSPORTING NO FIELDS.
+
+    IF SY-SUBRC EQ 0.
+      PV_ICON = 'ICON_LED_YELLOW'.
+    ELSE.
+      PV_ICON = 'ICON_LED_RED'.
+    ENDIF.
+
+    READ TABLE LT_AUFK_STATUS WITH KEY PHAS3 = ABAP_OFF TRANSPORTING NO FIELDS.
+
+    IF SY-SUBRC NE 0.
+      PV_ICON = 'ICON_LED_GREEN'.
+    ENDIF.
+
+  ELSE.
+    PV_ICON = ICON_NO_STATUS.
+    REFRESH GT_DISPLAY.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_TAB_AND_ODATE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_TAB_AND_ODATE .
+
+  DATA LV_DAY TYPE SCAL-INDICATOR.
+
+  CALL FUNCTION 'DATE_COMPUTE_DAY'
+    EXPORTING
+      DATE = GV_ORDER_DATE
+    IMPORTING
+      DAY  = LV_DAY.
+
+<font color ="#0000FF">* -- Input Field 값 변경 --</font>
+<font color ="#0000FF">* 클릭한 탭의 번호를 가져오고, Input Field의 요일을 구해서 두 요일의 간격을 Input Field에 더해준다.</font>
+<font color ="#0000FF">*   ex) 클릭한 탭이 일요일이면 7 / 현재 Input Field의 요일은 목요일이면 4</font>
+<font color ="#0000FF">*       7(일) - 4(목)를 빼고 현재 날짜에 더해주면(목요일 + 3일) 해당탭으로 이동</font>
+  GV_ORDER_DATE = GV_ORDER_DATE + ( OK_CODE+3(1) - LV_DAY ).
+
+<font color ="#0000FF">* -- Tab 변경 --</font>
+  MY_TABSTRIP-ACTIVETAB = OK_CODE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_SCREEN_OBJ</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_SCREEN_OBJ USING PO_CONTAINER TYPE REF TO CL_GUI_CUSTOM_CONTAINER
+                             PO_ALV_GRID  TYPE REF TO CL_GUI_ALV_GRID
+                             PV_CON_NAME.
+
+  CREATE OBJECT PO_CONTAINER
+    EXPORTING
+      CONTAINER_NAME = PV_CON_NAME.
+
+  CREATE OBJECT PO_ALV_GRID
+    EXPORTING
+      I_PARENT = PO_CONTAINER.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SHOW_ALV</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SHOW_ALV USING PO_ALV_GRID TYPE REF TO CL_GUI_ALV_GRID
+                    PT_DISPLAY  TYPE STANDARD TABLE
+                    PS_LAYO     TYPE        LVC_S_LAYO.
+
+<font color ="#0000FF">* ALV 출력</font>
+  CALL METHOD PO_ALV_GRID-&gt;SET_TABLE_FOR_FIRST_DISPLAY
+    EXPORTING
+      IS_LAYOUT       = PS_LAYO
+    CHANGING
+      IT_FIELDCATALOG = GT_FCAT
+      IT_OUTTAB       = PT_DISPLAY.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CHANGE_SCREEN</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CHANGE_SCREEN .
+
+  DATA LV_DAY TYPE SCAL-INDICATOR.
+
+  CALL FUNCTION 'DATE_COMPUTE_DAY'
+    EXPORTING
+      DATE = GV_ORDER_DATE
+    IMPORTING
+      DAY  = LV_DAY.
+
+  MY_TABSTRIP-ACTIVETAB = |TAB{ LV_DAY }|.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_ORDER_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SELECT_ORDER_DATA .
+  DATA LS_COLOR TYPE LVC_S_SCOL.
+
+  SELECT AUFK~AUFNR " 생산오더 ID
+         AUFK~PLNUM " 생산계획 ID
+         AUFK~MATNR " 자재코드
+         MAKT~MAKTX " MAKTX 자재명
+         AUFK~GAMNG " 생산 오더 수량
+         AUFK~MEINS " 자재 수량 단위
+         AUFK~STLNR " BOM ID
+         AUFK~WERKS " 플랜트 ID
+         T001W~PNAME " PNAME  플랜트명
+         AUFK~PLNNR " 공정 ID
+         PLKO~LTXA1 " LTXA1 공정명
+         AUFK~PHAS1 " 생산오더 시작단계
+         AUFK~PHAS2 " 생산오더 완료단계
+         AUFK~PHAS3 " 생산오더 마감단계
+    FROM ZCA_AUFK AS AUFK
+    LEFT OUTER JOIN ZCA_MAKT AS MAKT
+      ON AUFK~MATNR EQ MAKT~MATNR AND MAKT~SPRAS EQ '3'
+    LEFT OUTER JOIN ZCA_T001W AS T001W
+      ON AUFK~WERKS EQ T001W~WERKS
+    LEFT OUTER JOIN ZCA_PLKO AS PLKO
+      ON AUFK~PLNNR EQ PLKO~PLNNR
+    INTO CORRESPONDING FIELDS OF TABLE GT_DISPLAY
+    WHERE PSDAY EQ GV_ORDER_DATE
+      AND AUFK~WERKS EQ PA_PLANT
+    ORDER BY AUFK~MATNR.
+
+  LOOP AT GT_DISPLAY ASSIGNING FIELD-SYMBOL(&lt;FS_DISPLAY_FOR_ICON&gt;).
+
+    CASE ABAP_ON.
+      WHEN &lt;FS_DISPLAY_FOR_ICON&gt;-PHAS3.
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_TEXT = '생산 실적 입력 완료'(I03).
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_ICON = '@5B@'.
+
+      WHEN &lt;FS_DISPLAY_FOR_ICON&gt;-PHAS2.
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_TEXT = '생산 실적 입력 필요'(I04).
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_ICON = '@5D@'.
+
+      WHEN &lt;FS_DISPLAY_FOR_ICON&gt;-PHAS1.
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_TEXT = '생산 진행중 '(I05).
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_ICON = '@A8@'.
+
+      WHEN OTHERS.
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_TEXT = '생산 진행 대기'(I06).
+        &lt;FS_DISPLAY_FOR_ICON&gt;-STATUS_ICON = '@5C@'.
+    ENDCASE.
+
+  ENDLOOP.
+
+  LOOP AT GT_DISPLAY ASSIGNING FIELD-SYMBOL(&lt;FS_DISPLAY_FOR_COLOR&gt;).
+
+    CASE &lt;FS_DISPLAY_FOR_COLOR&gt;-STATUS_ICON.
+      WHEN '@5B@'. " 생산 실적 입력 완료
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_ICON'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 5.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_TEXT'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 5.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+
+      WHEN '@5D@'. " 생산 실적 입력 필요
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_ICON'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 3.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_TEXT'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 3.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+
+      WHEN '@A8@'. " 생산 진행중
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_ICON'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 1.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_TEXT'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 1.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+
+      WHEN '@5C@'. " 생산 진행 대기
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_ICON'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 6.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+        CLEAR LS_COLOR.
+        LS_COLOR-FNAME = 'STATUS_TEXT'.
+        LS_COLOR-COLOR-INT = 0.
+        LS_COLOR-COLOR-INV = 0.
+        LS_COLOR-COLOR-COL = 6.
+        APPEND LS_COLOR TO &lt;FS_DISPLAY_FOR_COLOR&gt;-COLOR.
+
+    ENDCASE.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH_GRID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM REFRESH_GRID USING PO_ALV_GRID TYPE REF TO CL_GUI_ALV_GRID
+                        PS_LAYO     TYPE        LVC_S_LAYO.
+
+  CALL METHOD PO_ALV_GRID-&gt;SET_FRONTEND_LAYOUT
+    EXPORTING
+      IS_LAYOUT = PS_LAYO.
+
+  CALL METHOD PO_ALV_GRID-&gt;REFRESH_TABLE_DISPLAY
+    EXPORTING
+      I_SOFT_REFRESH = ''.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CHECK_INIT_ODATE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CHECK_INIT_ODATE .
+  IF GV_ORDER_DATE IS NOT INITIAL.
+<font color ="#0000FF">*   오늘 요일을 구하고 요일에 해당하는 Tab으로 이동</font>
+    PERFORM CHANGE_SCREEN.
+<font color ="#0000FF">*   데이터 가공</font>
+    PERFORM SELECT_ORDER_DATA.
+
+  ELSE.
+    MY_TABSTRIP-ACTIVETAB = 'TAB1'.
+
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CATALOG</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FIELD_CATALOG .
+
+  CLEAR GS_FCAT.
+  REFRESH GT_FCAT.
+
+  GS_FCAT-FIELDNAME = 'STATUS_ICON'.
+  GS_FCAT-COLTEXT   = '상태'.
+  GS_FCAT-ICON      = 'X'.
+  GS_FCAT-OUTPUTLEN = '3'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " ICON
+
+  GS_FCAT-FIELDNAME = 'STATUS_TEXT'.
+  GS_FCAT-COLTEXT   = '진행 상태'.
+  GS_FCAT-OUTPUTLEN = '15'.
+  GS_FCAT-STYLE     = '00000020'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 상태 TEXT
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'AUFNR'.
+  GS_FCAT-FIELDNAME = 'AUFNR'.
+  GS_FCAT-OUTPUTLEN = '8'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산오더 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'PLNUM'.
+  GS_FCAT-FIELDNAME = 'PLNUM'.
+  GS_FCAT-OUTPUTLEN = '8'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산계획 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'STLNR'.
+  GS_FCAT-FIELDNAME = 'STLNR'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " BOM ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-OUTPUTLEN = '7'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재코드
+
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-COLTEXT   = '제품명'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재명
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'GAMNG'.
+  GS_FCAT-FIELDNAME = 'GAMNG'.
+  GS_FCAT-QFIELDNAME = 'MEINS'.
+  GS_FCAT-OUTPUTLEN = '9'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산 오더 수량
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'MEINS'.
+  GS_FCAT-FIELDNAME = 'MEINS'.
+  GS_FCAT-COLTEXT   = '단위'.
+  GS_FCAT-OUTPUTLEN = '4'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재 수량 단위
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'WERKS'.
+  GS_FCAT-FIELDNAME = 'WERKS'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 플랜트 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_T001W'.
+  GS_FCAT-REF_FIELD = 'PNAME'.
+  GS_FCAT-FIELDNAME = 'PNAME'.
+  GS_FCAT-OUTPUTLEN = '6'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 플랜트 명
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'PLNNR'.
+  GS_FCAT-FIELDNAME = 'PLNNR'.
+  GS_FCAT-NO_OUT    = 'X'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 공정 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_PLKO'.
+  GS_FCAT-REF_FIELD = 'LTXA1'.
+  GS_FCAT-FIELDNAME = 'LTXA1'.
+  GS_FCAT-OUTPUTLEN = '15'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 공정명
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CONFIRM_CANC_NO_SAVE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CONFIRM_CANC_NO_SAVE  CHANGING PV_ANSWER.
+
+<font color ="#0000FF">* 메시지클래스</font>
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      TITLEBAR       = '저장'(I00)
+      TEXT_QUESTION  = '변경내용을 저장하시겠습니까?'(I01)
+      TEXT_BUTTON_1  = '저장'(I00)
+      ICON_BUTTON_1  = '@2L@'
+      TEXT_BUTTON_2  = '저장안함'(I02)
+      DEFAULT_BUTTON = '1'
+    IMPORTING
+      ANSWER         = PV_ANSWER.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYOUT_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYOUT_0110 .
+
+  CLEAR GS_LAYO_0110.
+  GS_LAYO_0110-SEL_MODE   = 'B'.
+  GS_LAYO_0110-ZEBRA      = 'X'.
+  GS_LAYO_0110-INFO_FNAME = 'ROW_COLOR'.
+
+  GS_LAYO_0110-GRID_TITLE = |{ GV_ORDER_DATE+0(4) }년 { GV_ORDER_DATE+4(2) }월 { GV_ORDER_DATE+6(2) }일 생산실적 미입력 목록|.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CATALOG_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_FIELD_CATALOG_0110 .
+
+  CLEAR GS_FCAT.
+  REFRESH GT_FCAT.
+
+  GS_FCAT-FIELDNAME = 'STATUS_ICON'.
+  GS_FCAT-COLTEXT   = '상태'.
+  GS_FCAT-ICON      = 'X'.
+  GS_FCAT-OUTPUTLEN = '3'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " ICON
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'AUFNR'.
+  GS_FCAT-FIELDNAME = 'AUFNR'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  GS_FCAT-HOTSPOT   = 'X'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산오더 ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'STLNR'.
+  GS_FCAT-FIELDNAME = 'STLNR'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " BOM ID
+
+  GS_FCAT-REF_TABLE = 'ZCA_AUFK'.
+  GS_FCAT-REF_FIELD = 'MATNR'.
+  GS_FCAT-FIELDNAME = 'MATNR'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재코드
+
+  GS_FCAT-REF_TABLE = 'ZCA_MAKT'.
+  GS_FCAT-REF_FIELD = 'MAKTX'.
+  GS_FCAT-FIELDNAME = 'MAKTX'.
+  GS_FCAT-COLTEXT   = '제품명'.
+  GS_FCAT-OUTPUTLEN = '10'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 자재명
+
+  GS_FCAT-REF_TABLE = 'ZCA_AFRU'.
+  GS_FCAT-REF_FIELD = 'RUECK'.
+  GS_FCAT-FIELDNAME = 'RUECK'.
+  GS_FCAT-OUTPUTLEN = '11'.
+  APPEND GS_FCAT TO GT_FCAT. CLEAR GS_FCAT. " 생산실적 ID
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form EXIT_REFRESH_DATA_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM EXIT_REFRESH_DATA_0110 .
+  REFRESH GT_DIALOG_DISPLAY.
+  CLEAR: GV_SAVE_FLAG,
+         GV_INDEX_TMP,
+         ZCA_AFRU,
+         GV_MAKTX_0110,
+         GV_MEINS1_0110,
+         GV_MEINS2_0110,
+         GV_MEINS3_0110,
+         GV_POSSIBLE_SAVE,
+         GV_CHANGE_FLAG.
+
+  GV_SCREEN_FLAG = ABAP_OFF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYOUT_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_LAYOUT_0100 .
+  CLEAR GS_LAYO_0100.
+  GS_LAYO_0100-SEL_MODE   = 'D'.
+  GS_LAYO_0100-ZEBRA      = 'X'.
+  GS_LAYO_0100-COL_OPT    = 'X'.
+  GS_LAYO_0100-CTAB_FNAME = 'COLOR'.
+  GS_LAYO_0100-NO_ROWMARK = 'X'.
+
+  IF GV_ORDER_DATE IS NOT INITIAL.
+    GS_LAYO_0100-GRID_TITLE = |{ GS_DATE-PYEAR }년 { GS_DATE-PMONTH }월 { GS_DATE-PWEEK }주차 생산 실적 모니터링|.
+  ELSE.
+    GS_LAYO_0100-GRID_TITLE = |생산 실적 모니터링을 위해 일자를 입력해주세요.|.
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form DISPLAY_CHANGE_MODE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM DISPLAY_CHANGE_MODE .
+
+  LOOP AT SCREEN.
+
+    IF SCREEN-NAME EQ 'ZCA_AFRU-DISPOS'.
+      SCREEN-INPUT = '1'.
+      MODIFY SCREEN.
+      RETURN.
+    ENDIF.
+  ENDLOOP.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_AFRU</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_AFRU .
+  DATA: LS_AFRU TYPE ZCA_AFRU,
+        LV_NR   TYPE C LENGTH 10,
+        LV_COST TYPE ZCA_DMBTR.
+  READ TABLE GT_DIALOG_DISPLAY INTO GS_DIALOG_DISPLAY INDEX GV_INDEX_TMP.
+
+<font color ="#0000FF">* 생산실적ID 채번</font>
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      NR_RANGE_NR = 'PC'                 " Number range number
+      OBJECT      = 'ZCA_RUECK'          " Name of number range object
+    IMPORTING
+      NUMBER      = LV_NR.                " free number
+  LV_NR = |PC{ LV_NR+2(8) }|.
+
+<font color ="#0000FF">* 폐기 수량이 0이면 최종생산수량이 생산 오더 수량과 같게 설정</font>
+  IF ZCA_AFRU-DISPOS EQ 0.
+    ZCA_AFRU-PFQTY = ZCA_AFRU-PDQTY.
+  ENDIF.
+
+  LS_AFRU = VALUE #(
+    RUECK  = LV_NR
+    AUFNR  = GS_DIALOG_DISPLAY-AUFNR
+    MATNR  = GS_DIALOG_DISPLAY-MATNR
+    INSPD  = SY-DATUM
+    PDQTY  = ZCA_AFRU-PDQTY
+    DISPOS = ZCA_AFRU-DISPOS
+    PFQTY  = ZCA_AFRU-PFQTY
+    MEINS  = GV_MEINS1_0110
+    ERNAM   = SY-UNAME
+    ERDAT   = SY-DATUM
+    ERZET   = SY-UZEIT
+  ).
+
+  COMMIT WORK.
+
+<font color ="#0000FF">* 생산실적 데이터 생성</font>
+  INSERT ZCA_AFRU FROM LS_AFRU.
+
+  IF SY-SUBRC NE 0.
+    ROLLBACK WORK.
+    MESSAGE E157. "생산실적 생성중 오류가 발생했습니다.
+  ENDIF.
+
+  GS_DIALOG_DISPLAY-STATUS_ICON = '@5B@'.
+  GS_DIALOG_DISPLAY-RUECK = LV_NR.
+
+<font color ="#0000FF">* 우측 상세보기 화면 데이터 Update</font>
+  ZCA_AFRU = VALUE #(
+   BASE ZCA_AFRU
+   RUECK = LV_NR
+   ERNAM = SY-UNAME
+   ERDAT = SY-DATUM
+   ERZET = SY-UZEIT
+  ).
+
+<font color ="#0000FF">* 생산오더 테이블에 생산실적완료 플래그 변경</font>
+  UPDATE ZCA_AUFK SET PHAS3 = ABAP_ON
+                      AENAM = SY-UNAME
+                      AEDAT = SY-DATUM
+                      AEZET = SY-UZEIT
+  WHERE AUFNR = GS_DIALOG_DISPLAY-AUFNR.
+
+<font color ="#0000FF">* 모든 데이터 업데이트가 완료 되었다면, 자재문서와 회계전표 발행</font>
+  IF SY-SUBRC EQ 0.
+    MODIFY GT_DIALOG_DISPLAY FROM GS_DIALOG_DISPLAY INDEX GV_INDEX_TMP.
+
+    PERFORM FI_FUNCTION USING GS_DIALOG_DISPLAY-AUFNR
+                        CHANGING LV_COST.
+
+    COMMIT WORK.
+
+    PERFORM MM_FUNCTION USING GS_DIALOG_DISPLAY-MATNR
+                              LS_AFRU-PFQTY
+                              LS_AFRU-DISPOS
+                              PA_PLANT
+                              LV_COST.
+
+    COMMIT WORK.
+
+    REFRESH GT_DISPLAY.
+    CLEAR LV_COST.
+    PERFORM SELECT_ORDER_DATA.
+
+    MESSAGE S158. " 생산실적이 성공적으로 입력되었습니다.
+
+  ELSE.
+
+    ROLLBACK WORK.
+    MESSAGE E157. " 생산실적 생성중 오류가 발생했습니다.
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CHECK_SAVE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CHECK_SAVE USING PV_ANSWER.
+
+  PERFORM CONFIRM_CANC_NO_SAVE CHANGING PV_ANSWER.
+  CASE PV_ANSWER.
+    WHEN '1'.
+      PERFORM CREATE_AFRU.
+      GV_SAVE_FLAG = ABAP_ON.
+      GV_SCREEN_FLAG = ABAP_OFF.
+    WHEN '2'.
+      MESSAGE S165. " 취소하셨습니다.
+      CLEAR GV_CHANGE_FLAG.
+
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form MM_FUNCTION</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM MM_FUNCTION USING PV_MATNR TYPE ZCA_MARA-MATNR
+                       PV_PFQTY TYPE ZCA_AFRU-PFQTY
+                       PV_DISPOS TYPE ZCA_AFRU-DISPOS
+                       PV_PLANT  TYPE ZCA_T001W-WERKS
+                       PV_COST   TYPE ZCA_DMBTR.
+  DATA LV_LGORT TYPE ZCA_MMT010-LGORT.
+
+  SELECT SINGLE MRART
+    FROM ZCA_MARA
+    INTO @DATA(LV_MRART)
+    WHERE MATNR EQ @PV_MATNR.
+
+  CASE LV_MRART.
+    WHEN 'HALB'.
+      LV_LGORT = 'SL02'.
+    WHEN 'FERT'.
+      LV_LGORT = 'SL01'.
+    WHEN OTHERS.
+      ROLLBACK WORK.
+      MESSAGE E159. " 반제품 또는 완제품이 아닙니다.
+  ENDCASE.
+
+  call function <a href ="zca_mm_create_batch/zca_mm_create_batch.html">'ZCA_MM_CREATE_BATCH'</a>
+    EXPORTING
+      IV_MATNR = PV_MATNR   " 자재코드
+      IV_BTQTY = PV_PFQTY   " 최종생산수량
+      IV_TRQUA = PV_DISPOS  " 폐기수량
+      IV_WERKS = PV_PLANT   " 플랜트 ID
+      IV_LGORT = LV_LGORT   " 창고 코드 (저장 위치)
+      IV_BWART = '101'      " 이동 유형 코드
+      IV_COST  = PV_COST.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form GET_FI_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM GET_FI_DATA  CHANGING PT_RUECK_TABLE TYPE ZCA_PPT040.
+  DATA LS_AFRU_DATA LIKE LINE OF PT_RUECK_TABLE.
+
+  SELECT AUFNR
+    FROM ZCA_AUFK
+    INTO TABLE @DATA(LT_AUFNR)
+    WHERE PSDAY EQ @GV_ORDER_DATE.
+
+  LOOP AT LT_AUFNR INTO DATA(LS_AUFNR).
+
+    SELECT SINGLE MATNR, PFQTY, MEINS
+      FROM ZCA_AFRU
+      INTO @LS_AFRU_DATA
+      WHERE AUFNR EQ @LS_AUFNR-AUFNR.
+
+    APPEND LS_AFRU_DATA TO PT_RUECK_TABLE.
+
+  ENDLOOP.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form INPUT_CHECK_PLANT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM INPUT_CHECK_PLANT .
+
+  SELECT SINGLE PTYPE, PNAME
+    FROM ZCA_T001W
+    INTO @DATA(LS_CHECK)
+    WHERE WERKS EQ @PA_PLANT.
+
+  IF LS_CHECK-PTYPE NE 'PROD'.
+    MESSAGE E160. "생산공장을 선택해주세요.
+  ELSE.
+    GV_TITLE_SCR100 = |[PP][{ LS_CHECK-PNAME }-{ PA_PLANT }] 생산실적 입력|.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form INPUT_CHECK_DATE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM INPUT_CHECK_DATE .
+
+  IF PA_ODATE &gt; GV_TODATE.
+    MESSAGE E161 WITH GV_TODATE.
+  ENDIF.
+  GV_ORDER_DATE = PA_ODATE.
+  GV_CHECK_DATE_FLAG = ABAP_ON.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form ON_HOTSPOT_CLICK</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM ON_HOTSPOT_CLICK  USING    E_ROW_ID    TYPE LVC_S_ROW
+                                E_COLUMN_ID TYPE LVC_S_COL
+                                SENDER.
+
+  CASE SENDER.
+    WHEN GO_ALV_GRID_0110.
+      IF GV_SCREEN_FLAG EQ ABAP_OFF.
+        IF GV_INDEX_TMP NE E_ROW_ID-INDEX.
+          READ TABLE GT_DIALOG_DISPLAY ASSIGNING FIELD-SYMBOL(&lt;FS_CHANGE_COLOR&gt;) INDEX E_ROW_ID-INDEX.
+
+          IF SY-SUBRC NE 0.
+            MESSAGE '알수없는 오류입니다.' TYPE 'I' DISPLAY LIKE 'W'.
+            RETURN.
+          ENDIF.
+
+          CASE E_COLUMN_ID-FIELDNAME.
+            WHEN 'AUFNR'.
+              CLEAR GS_DISPLAY.
+              READ TABLE GT_DISPLAY INTO GS_DISPLAY WITH KEY AUFNR = &lt;FS_CHANGE_COLOR&gt;-AUFNR.
+              IF SY-SUBRC NE 0.
+                MESSAGE '알수없는 오류입니다.' TYPE 'I' DISPLAY LIKE 'W'.
+                RETURN.
+              ENDIF.
+
+              ZCA_AFRU = VALUE #(
+                AUFNR = GS_DISPLAY-AUFNR
+                PDQTY = GS_DISPLAY-GAMNG
+              ).
+              GV_MAKTX_0110 = GS_DISPLAY-MAKTX.
+              GV_MEINS1_0110 = GS_DISPLAY-MEINS.
+              GV_MEINS2_0110 = GS_DISPLAY-MEINS.
+              GV_MEINS3_0110 = GS_DISPLAY-MEINS.
+
+              IF &lt;FS_CHANGE_COLOR&gt;-STATUS_ICON EQ '@5B@'.
+                SELECT SINGLE RUECK, ERNAM, ERDAT, ERZET, DISPOS, PFQTY
+                  FROM ZCA_AFRU
+                  INTO CORRESPONDING FIELDS OF @ZCA_AFRU
+                  WHERE AUFNR EQ @&lt;FS_CHANGE_COLOR&gt;-AUFNR.
+              ENDIF.
+
+              &lt;FS_CHANGE_COLOR&gt;-ROW_COLOR = 'C300'.
+
+              IF GV_INDEX_TMP IS NOT INITIAL.
+                READ TABLE GT_DIALOG_DISPLAY ASSIGNING FIELD-SYMBOL(&lt;FS_CHANGE_INIT_COLOR&gt;) INDEX GV_INDEX_TMP.
+                &lt;FS_CHANGE_INIT_COLOR&gt;-ROW_COLOR = ''.
+              ENDIF.
+
+              PERFORM REFRESH_GRID USING GO_ALV_GRID_0110
+                                         GS_LAYO_0110.
+
+              GV_INDEX_TMP = E_ROW_ID-INDEX.
+              LEAVE SCREEN.
+          ENDCASE.
+        ENDIF.
+      ELSE.
+        MESSAGE I162. " 아직 수정중입니다.
+
+      ENDIF.
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form HANDLE_DOUBLE_CLICK</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM HANDLE_DOUBLE_CLICK  USING    E_COLUMN TYPE LVC_S_COL
+                                   E_ROW    TYPE LVC_S_ROW
+                                   SENDER.
+  CASE SENDER.
+    WHEN GO_ALV_GRID. " Screen 100
+      READ TABLE GT_DISPLAY INTO GS_DISPLAY INDEX E_ROW-INDEX.
+
+      " 더블클릭 한 행의 생산오더 ID를 가지고 실적을 검색
+      IF GS_DISPLAY-PHAS3 EQ ABAP_ON.
+        SELECT SINGLE *
+          FROM ZCA_AFRU
+          INTO @DATA(LS_AFRU)
+          WHERE AUFNR EQ @GS_DISPLAY-AUFNR.
+
+        IF SY-SUBRC EQ 0.
+          MOVE-CORRESPONDING LS_AFRU TO ZCA_AFRU.
+          GV_MAKTX_0110 = GS_DISPLAY-MAKTX.
+          GV_MEINS1_0110 = GS_DISPLAY-MEINS.
+          GV_MEINS2_0110 = GS_DISPLAY-MEINS.
+          GV_MEINS3_0110 = GS_DISPLAY-MEINS.
+
+          CALL SCREEN 0120 STARTING AT 20 5.
+
+        ELSE. " 생산실적 입력 플래그가 있지만, 실적이 검색이 되지 않을 때 ( 예외처리 )
+          MESSAGE I163 DISPLAY LIKE 'E'. " 생산실적 데이터에 오류가 있습니다.
+        ENDIF.
+
+      ENDIF.
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form FI_FUNCTION</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM FI_FUNCTION  USING    PV_AUFNR TYPE ZCA_AUFNR
+                  CHANGING PV_COST  TYPE ZCA_DMBTR.
+
+  call function <a href ="zca_fi_post_pp_docu/zca_fi_post_pp_docu.html">'ZCA_FI_POST_PP_DOCU'</a>
+    EXPORTING
+      IV_FLAG  = '2'                 " 1: 원자재 투입 / 2: 제품 생산
+      IV_AUFNR = PV_AUFNR
+    IMPORTING
+      EV_COST  = PV_COST.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form ALL_BUTTON</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM ALL_BUTTON USING PV_ANSWER.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      TITLEBAR       = '저장'(I00)
+      TEXT_QUESTION  = '모든 실적의 폐기량을 없음으로 하시겠습니까?'
+      TEXT_BUTTON_1  = '저장'(I00)
+      ICON_BUTTON_1  = '@2L@'
+      TEXT_BUTTON_2  = '저장안함'(I02)
+      DEFAULT_BUTTON = '1'
+      DISPLAY_CANCEL_BUTTON = ABAP_OFF
+    IMPORTING
+      ANSWER         = PV_ANSWER.
+
+  CASE PV_ANSWER.
+    WHEN '1'.
+      PERFORM CREATE_AFRU_ALL.
+      GV_SAVE_FLAG = ABAP_ON.
+      GV_SCREEN_FLAG = ABAP_OFF.
+    WHEN '2'.
+      MESSAGE S165. " 취소하셨습니다.
+      CLEAR GV_CHANGE_FLAG.
+
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form CREATE_AFRU_ALL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM CREATE_AFRU_ALL .
+  DATA: LS_AFRU TYPE ZCA_AFRU,
+        LV_NR   TYPE C LENGTH 10,
+        LV_COST TYPE ZCA_DMBTR.
+
+  LOOP AT GT_DIALOG_DISPLAY INTO GS_DIALOG_DISPLAY WHERE STATUS_ICON EQ '@5D@'.
+
+    CALL FUNCTION 'NUMBER_GET_NEXT'
+      EXPORTING
+        NR_RANGE_NR = 'PC'                 " Number range number
+        OBJECT      = 'ZCA_RUECK'          " Name of number range object
+      IMPORTING
+        NUMBER      = LV_NR.                " free number
+    LV_NR = |PC{ LV_NR+2(8) }|.
+
+    READ TABLE GT_DISPLAY INTO GS_DISPLAY WITH KEY AUFNR = GS_DIALOG_DISPLAY-AUFNR.
+
+    LS_AFRU = VALUE #(
+      RUECK  = LV_NR
+      AUFNR  = GS_DIALOG_DISPLAY-AUFNR
+      MATNR  = GS_DIALOG_DISPLAY-MATNR
+      INSPD  = SY-DATUM
+      PDQTY  = GS_DIALOG_DISPLAY-GAMNG
+      DISPOS = 0
+      PFQTY  = GS_DIALOG_DISPLAY-GAMNG
+      MEINS  = GS_DISPLAY-MEINS
+      ERNAM   = SY-UNAME
+      ERDAT   = SY-DATUM
+      ERZET   = SY-UZEIT
+    ).
+
+    COMMIT WORK.
+    INSERT ZCA_AFRU FROM LS_AFRU.
+
+    IF SY-SUBRC NE 0.
+      ROLLBACK WORK.
+      MESSAGE E157. "생산실적 생성중 오류가 발생했습니다.
+    ENDIF.
+
+    GS_DIALOG_DISPLAY-STATUS_ICON = '@5B@'.
+    GS_DIALOG_DISPLAY-RUECK = LV_NR.
+
+    UPDATE ZCA_AUFK SET PHAS3 = ABAP_ON
+                        AENAM = SY-UNAME
+                        AEDAT = SY-DATUM
+                        AEZET = SY-UZEIT
+    WHERE AUFNR = GS_DIALOG_DISPLAY-AUFNR.
+
+    IF SY-SUBRC EQ 0.
+      MODIFY GT_DIALOG_DISPLAY FROM GS_DIALOG_DISPLAY.
+
+      PERFORM FI_FUNCTION USING GS_DIALOG_DISPLAY-AUFNR
+                          CHANGING LV_COST.
+
+      COMMIT WORK.
+
+      PERFORM MM_FUNCTION USING GS_DIALOG_DISPLAY-MATNR
+                                LS_AFRU-PFQTY
+                                LS_AFRU-DISPOS
+                                PA_PLANT
+                                LV_COST.
+
+      COMMIT WORK.
+
+      CLEAR LV_COST.
+
+    ELSE.
+
+      ROLLBACK WORK.
+      MESSAGE E157. " 생산실적 생성중 오류가 발생했습니다.
+    ENDIF.
+
+  ENDLOOP.
+
+  MESSAGE S158. " 생산실적이 성공적으로 입력되었습니다.
+  REFRESH GT_DISPLAY.
+  PERFORM SELECT_ORDER_DATA.
+
+  CLEAR ZCA_AFRU.
+  CLEAR GV_MAKTX_0110.
+  CLEAR GV_MEINS1_0110.
+  CLEAR GV_MEINS2_0110.
+  CLEAR GV_MEINS3_0110.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

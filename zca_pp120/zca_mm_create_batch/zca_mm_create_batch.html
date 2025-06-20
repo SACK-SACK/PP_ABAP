@@ -1,0 +1,251 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_MM_CREATE_BATCH</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZCA_MM_CREATE_BATCH</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  입고할때 쓰세요</b></font>
+<hr>
+<pre width="100">
+FUNCTION zca_mm_create_batch.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(IV_MATNR) TYPE  ZCA_MATNR</font>
+<font color ="#0000FF">*"     REFERENCE(IV_BTQTY) TYPE  ZCA_BTQTY</font>
+<font color ="#0000FF">*"     REFERENCE(IV_WERKS) TYPE  ZCA_WERKS</font>
+<font color ="#0000FF">*"     REFERENCE(IV_LGORT) TYPE  ZCA_LGORT</font>
+<font color ="#0000FF">*"     REFERENCE(IV_TRQUA) TYPE  ZCA_SPEME</font>
+<font color ="#0000FF">*"     REFERENCE(IV_BWART) TYPE  ZCA_BWART</font>
+<font color ="#0000FF">*"     REFERENCE(IV_COST) TYPE  ZCA_DMBTR</font>
+<font color ="#0000FF">*"  EXPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(EV_PRICE) TYPE  ZCA_DMBTR</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zca_mm_create_batch.html">Global data declarations</a></font>
+
+<font color ="#0000FF">* 사용법 : 최초 입고시 플랜트 창고 자재번호 수량을 적으면 배치를 생성하고 MARD TABLE에 반영됩니다.</font>
+<font color ="#0000FF">* 자재유형쓰면 자재문서도 생성됩니다. PP : 생산오더로 인한 입고 101</font>
+
+  DATA: lt_mmt010 TYPE TABLE OF zca_mmt010,
+        ls_mmt010 LIKE LINE OF  lt_mmt010,
+        lv_num4   TYPE char10,              " 배치 계산용
+        lv_num5   TYPE char10,
+        lt_mard   TYPE TABLE OF zca_mard,
+        ls_mard   LIKE LINE OF  lt_mard,
+        ls_mkpf   TYPE zca_mkpf,
+        ls_mseg   TYPE zca_mseg,
+        lt_mara   TYPE TABLE OF zca_mara,
+        ls_mara   LIKE LINE OF  lt_mara,
+        lv_price1 TYPE zca_dmbtr,
+        lv_price2 TYPE zca_dmbtr,
+        lt_mmt030 TYPE TABLE OF zca_mmt030,
+        ls_mmt030 LIKE LINE OF  lt_mmt030.
+
+
+  DATA: BEGIN OF ls_join.
+          include structure <a href ="zca_mmt010/dictionary-zca_mmt010.html">zca_mmt010</a>.
+  DATA:   mrart TYPE zca_mattype,
+          meins TYPE zca_meins,
+          datab TYPE zca_datab,
+        END OF ls_join.
+
+  DATA: lt_data TYPE TABLE OF zca_mmt010,
+        ls_data LIKE LINE OF  lt_data.
+
+
+  lv_num4 = |{ sy-datum+2(6) }0000 |.
+  lv_num5 = sy-datum+2(6) && '%'.                            " 오늘날짜로 시작하는거 비교용
+
+<font color ="#0000FF">* 가용수량 function</font>
+
+  SELECT SINGLE * FROM zca_mmt010             " 오늘날짜 0000이 있는지 확인
+    WHERE charg = lv_num4.
+
+<font color ="#0000FF">* 배치 부여</font>
+  IF sy-subrc &lt;&gt; 0.
+    " 오늘중 첫배치 부여라면?
+    ls_mmt010-charg = lv_num4.               " 0000 부여
+
+  ELSE.
+    SELECT * FROM zca_mmt010              " 오늘날 날짜 형식인걸 배치번호 내림차순 정렬후 상위 하나 SELECT
+      INTO TABLE lt_data UP TO 1 ROWS
+      WHERE charg LIKE lv_num5
+      ORDER BY charg DESCENDING.
+
+    READ TABLE lt_data INTO ls_data INDEX 1.  " 그걸 LS에다가 넣는다.
+
+    ls_mmt010-charg = ls_data-charg + 1.    " 1더해서 추가한다.
+
+  ENDIF.
+
+  SELECT SINGLE * FROM zca_mara INTO CORRESPONDING FIELDS OF ls_mara
+    WHERE matnr = iv_matnr.
+
+  ls_mmt010-matnr = iv_matnr.
+  ls_mmt010-werks = iv_werks.
+  ls_mmt010-lgort = iv_lgort.
+  ls_mmt010-lvorm = ''.
+  ls_mmt010-btqty = iv_btqty.
+  ls_mmt010-vfdat = sy-datum + ls_mara-datab.
+  ls_mmt010-mattype = ls_mara-mrart.
+  ls_mmt010-unit = ls_mara-meins.
+  ls_mmt010-ernam = sy-uname.
+  ls_mmt010-erdat = sy-datum.
+  ls_mmt010-erzet = sy-uzeit.
+
+
+  INSERT zca_mmt010 FROM ls_mmt010.       " 여기까지 배치 추가 로직
+
+<font color ="#0000FF">* 여기서부터 MARD 업데이트</font>
+  CLEAR ls_mard.
+  SELECT SINGLE * INTO ls_mard FROM zca_mard
+    WHERE werks = iv_werks  " 입고 플랜트
+      AND lgort = iv_lgort  " 입고 창고
+      AND matnr = iv_matnr. " 입고 자재
+
+
+  " 원래 재고 있을때
+  IF sy-subrc = 0.
+    " 가용수량
+    ls_mard-labst += iv_btqty.
+    ls_mard-tstock = ls_mard-labst + ls_mard-speme.
+
+    lv_price1 = iv_cost.
+
+    ls_mard-topri += lv_price1.  " 합친가격
+    ls_mard-umlme = 0.
+
+    ls_mard-aenam = sy-uname.
+    ls_mard-aedat = sy-datum.
+    ls_mard-aezet = sy-uzeit.
+
+
+    UPDATE zca_mard FROM ls_mard.
+
+    IF sy-subrc &lt;&gt; 0.
+      MESSAGE '정확한 키값을 입력해주세요' TYPE 'W' DISPLAY LIKE 'I'. " 이거 없으면 insert로 만들기
+    ENDIF.
+
+  ELSE.  " 최초입고일때
+
+    ls_mard-matnr = iv_matnr.
+    ls_mard-werks = iv_werks.
+    ls_mard-lgort = iv_lgort.
+    IF iv_lgort = 'SL01'.
+      ls_mard-lgobe = '제품창고'.
+    ELSEIF iv_lgort = 'SL02'.
+      ls_mard-lgobe = '반제품창고'.
+    ENDIF.
+    ls_mard-labst = iv_btqty.
+    ls_mard-speme = 0.
+    ls_mard-tstock = iv_btqty.
+    ls_mard-meins = ls_mara-meins.
+    ls_mard-umlme = 0.
+
+<font color ="#0000FF">*    CALL FUNCTION 'ZCA_PP_GET_PRICE'</font>
+<font color ="#0000FF">*      EXPORTING</font>
+<font color ="#0000FF">*        ev_matnr = iv_matnr           " 자재코드</font>
+<font color ="#0000FF">*        ev_gsmng = iv_btqty           " 수량</font>
+<font color ="#0000FF">*      IMPORTING</font>
+<font color ="#0000FF">*        ev_topri = ls_mard-topri.     " 원자재 총 금액</font>
+    ls_mard-topri = iv_cost.
+    ls_mard-waers = 'KRW'.
+
+    ls_mard-ernam = sy-uname.
+    ls_mard-erdat = sy-datum.
+    ls_mard-erzet = sy-uzeit.
+    INSERT zca_mard FROM ls_mard.
+
+  ENDIF.
+
+<font color ="#0000FF">* 가용수량 자재문서 생성 - header 먼저</font>
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '01'               " Number range number
+      object      = 'ZCA_MBLNR'      " Name of number range object
+    IMPORTING
+      number      = ls_mkpf-mblnr.   " free number
+  ls_mkpf-mblnr = |MD{ ls_mkpf-mblnr }|.
+  ls_mkpf-mjahr = sy-datum(4).
+  ls_mkpf-werks = iv_werks.
+  ls_mkpf-mdart = 'WE'.
+  ls_mkpf-matnr = iv_matnr.
+  ls_mkpf-budat = sy-datum.
+  ls_mkpf-ernam = sy-uname.
+  ls_mkpf-erdat = sy-datum.
+  ls_mkpf-erzet = sy-uzeit.
+
+
+  INSERT zca_mkpf FROM ls_mkpf.
+
+<font color ="#0000FF">* 가용수량 자재문서 생성 - ITEM</font>
+
+  ls_mseg-mblnr = ls_mkpf-mblnr.
+  ls_mseg-mjahr = ls_mkpf-mjahr.
+  ls_mseg-matnr = iv_matnr.
+  ls_mseg-charg = ls_mmt010-charg.
+  ls_mseg-bwart = iv_bwart.
+  ls_mseg-plantfr = ''.
+  ls_mseg-plantto = iv_werks.
+  ls_mseg-menge = iv_btqty.
+  ls_mseg-meinh = ls_mara-meins.
+  ls_mseg-ernam = sy-uname.
+  ls_mseg-erdat = sy-datum.
+  ls_mseg-erzet = sy-uzeit.
+
+  INSERT zca_mseg FROM ls_mseg.
+
+<font color ="#0000FF">* 폐기는 있을때만 바로 mard에만 반영 -&gt; 폐기창고에서 정보를 찾고 최초입고면 INSERT 이미 있으면 UPDATE</font>
+  IF iv_trqua &lt;&gt; 0.     " 폐기정보가 0이 아니라면?
+
+    CLEAR ls_mard.
+    ls_mard-matnr = iv_matnr.
+    ls_mard-werks = 'P001'.
+    ls_mard-lgort = 'SL04'.
+    ls_mard-lgobe = '폐기창고'.
+    ls_mard-labst = 0.
+    ls_mard-speme = iv_trqua.
+    ls_mard-tstock = ls_mard-labst + ls_mard-speme.
+    ls_mard-meins = ls_mara-meins.
+    call function <a href ="../zca_pp_get_price/zca_pp_get_price.html">'ZCA_PP_GET_PRICE'</a>
+      EXPORTING
+        ev_matnr = iv_matnr           " 자재코드
+        ev_gsmng = iv_trqua           " 수량
+      IMPORTING
+        ev_topri = ls_mard-topri.     " 원자재 총 금액
+
+    ls_mard-waers = 'KRW'.
+
+    ls_mseg-aenam = sy-uname.
+    ls_mseg-aedat = sy-datum.
+    ls_mseg-aezet = sy-uzeit.
+
+    UPDATE zca_mard FROM ls_mard.
+    IF sy-subrc &lt;&gt; 0.
+      ls_mseg-ernam = sy-uname.
+      ls_mseg-erdat = sy-datum.
+      ls_mseg-erzet = sy-uzeit.
+      INSERT zca_mard FROM ls_mard.
+    ENDIF.
+
+<font color ="#0000FF">* 폐기 자재문서 생성 -&gt; 프로그램에서 한번에 하는중임</font>
+
+  ENDIF.
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   정확한 키값을 입력해주세요</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,1319 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP110_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP110_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP110_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP110_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_app_toolbar</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_app_toolbar.
+  "앱 툴바 버튼을 만들기 위한 structure 선언
+  DATA ls_str TYPE smp_dyntxt.
+
+  ls_str-icon_id = icon_create_text.
+  ls_str-icon_text = '생산오더 생성'.
+  sscrfields-functxt_01 = ls_str.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fc_app_toolbar</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fc_app_toolbar.
+  "Function key 1 번 이므로 sy-ucomm = 'FC01'
+  IF sscrfields-ucomm = 'FC01'.
+    CALL TRANSACTION 'ZCAPP090'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object .
+  CREATE OBJECT go_container_100
+    EXPORTING
+      container_name = 'CCON'.
+
+  "생산오더 alv
+  CREATE OBJECT go_alv_grid_100
+    EXPORTING
+      i_parent = go_container_100.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form variant_100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM variant_100 .
+  CLEAR gs_variant.
+  gs_variant-report = sy-cprog.
+  gs_variant-handle = '100'.
+  gv_save = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form layout_100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM layout_100 .
+  CLEAR gs_layout.
+  gs_layout-grid_title = gs_display_100-psday(4) && '년' && gs_display_100-psday+4(2) && '월'
+                         && gs_display_100-psday+6(2) && '일' && '생산오더'.
+
+  gs_layout-sel_mode   = 'B'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_100 .
+  CALL METHOD go_alv_grid_100-&gt;set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZCA_PPS020'
+      is_variant       = gs_variant
+      i_save           = gv_save
+<font color ="#0000FF">*     i_default        = 'X'</font>
+      is_layout        = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab        = gt_display_100
+      it_fieldcatalog  = gt_fieldcat.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_200</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_200 .
+
+  CALL METHOD go_alv_grid_200-&gt;set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZCA_PPS040'
+      is_variant       = gs_variant
+      i_save           = gv_save
+<font color ="#0000FF">*     i_default        = 'X'</font>
+      is_layout        = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab        = gt_display_200
+      it_fieldcatalog  = gt_fieldcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form layout_200</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM layout_200 .
+  CLEAR gs_layout.
+  gs_layout-grid_title = |생산 현황 : { gs_display_100-werks } { gs_display_100-pname }|.
+  gs_layout-sel_mode   = 'D'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fieldcatalog_100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fieldcatalog_100 .
+  REFRESH gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'ICON'. "자재입고 여부
+  gs_fieldcat-coltext   = '자재입고 여부'.
+  gs_fieldcat-just      = 'C'.
+  gs_fieldcat-outputlen = 9.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'AUFNR'. "생산오더ID
+  gs_fieldcat-key       = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PWEEK'. "주차
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MATNR'.
+  gs_fieldcat-outputlen = 12.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-outputlen = 20.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname  = 'GAMNG'.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  gs_fieldcat-coltext    = '오더 수량'.
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-outputlen = 3.
+  gs_fieldcat-coltext   = '단위'.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'STLNR'. "BOM ID
+  gs_fieldcat-hotspot   = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'WERKS'. "플랜트 ID
+  gs_fieldcat-outputlen = 6.
+  gs_fieldcat-hotspot   = abap_on.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PNAME'. "플랜트명
+  gs_fieldcat-outputlen = 15.
+  APPEND gs_fieldcat TO gt_fieldcat.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fieldcatalog_200</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fieldcatalog_200 .
+  REFRESH gt_fieldcat.
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'ICON'. "생산 상태 icon
+  gs_fieldcat-coltext   = '상태'.
+  gs_fieldcat-icon      = abap_on.
+  gs_fieldcat-outputlen = 3.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PLNNR'. "공정 ID
+<font color ="#0000FF">*  gs_fieldcat-hotspot   = abap_on.</font>
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MATNR'.
+  gs_fieldcat-outputlen = 12.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MAKTX'.
+  gs_fieldcat-outputlen = 20.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname  = 'GAMNG'.
+  gs_fieldcat-qfieldname = 'MEINS'.
+  gs_fieldcat-coltext    = '생산 수량'.
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MEINS'.
+  gs_fieldcat-coltext   = '단위'.
+  gs_fieldcat-outputlen = 3.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PLNKN'.
+  gs_fieldcat-coltext   = '공정 단계'.
+  gs_fieldcat-outputlen = 6.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'LTXA2'.
+  gs_fieldcat-coltext   = '공정명'.
+  gs_fieldcat-just      = 'C'.
+  gs_fieldcat-outputlen = 8.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'RATE'.
+  gs_fieldcat-coltext   = '진행률'.
+  gs_fieldcat-outputlen = 5.
+  gs_fieldcat-col_pos   = 5.
+  APPEND gs_fieldcat TO gt_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'BUTTON'.
+  gs_fieldcat-coltext   = '생산실적 입력'.
+  gs_fieldcat-just      = 'C'.
+  gs_fieldcat-style     = cl_gui_alv_grid=&gt;mc_style_button.
+  gs_fieldcat-outputlen = 11.
+  APPEND gs_fieldcat TO gt_fieldcat.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data .
+  "생산오더 조회
+  PERFORM select_zca_aufk.
+  " 자재 재고 조회
+  PERFORM select_zca_mard.
+  "공정 아이템 조회
+  PERFORM select_zca_plpo.
+
+  "생산 완료된 생산현황 조회
+  PERFORM finished_production.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form modify_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM modify_data .
+  MOVE-CORRESPONDING gt_aufk TO gt_display_100.
+
+  "자재 입고 확인
+  "mard 테이블에서 생산할 자재의 반제품 원재료의 총 재고 확인
+  PERFORM check_matnr_stock.
+
+<font color ="#0000FF">*  LOOP AT gt_display_100 INTO gs_display_100.</font>
+<font color ="#0000FF">*    gs_display_100-icon = icon_led_green.</font>
+<font color ="#0000FF">*    MODIFY gt_display_100 FROM gs_display_100 TRANSPORTING icon.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_zca_aufk</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_zca_aufk .
+  "생산 오더 조회
+  REFRESH gt_aufk.
+  SELECT
+    aufnr
+    plnum
+    pweek
+    psday
+    peday
+    gamng
+    meins
+    matnr
+    stlnr
+    plnnr
+    werks
+    phas1
+    phas2
+    phas3
+    loekz
+    maktx
+    mrart
+    pname
+    FROM zca_ppv030
+    INTO CORRESPONDING FIELDS OF TABLE gt_aufk
+     WHERE werks EQ p_werks
+       AND psday IN s_psday
+       AND matnr IN s_matnr
+       AND spras EQ '3'
+       AND loekz EQ space.
+
+  IF sy-subrc EQ 0.
+    CLEAR gs_icon.
+
+    LOOP AT gt_aufk INTO gs_aufk.
+      CASE gs_aufk-mrart.
+        WHEN 'HALB'.
+          IF gs_aufk-phas2 EQ 'X'.
+            gs_icon-02 = '@5B@'.
+          ELSEIF gs_aufk-phas1 EQ 'X'.
+            gs_icon-02 = '@5D@'.
+            gs_icon-03 = '@5D@'.
+          ENDIF.
+        WHEN 'FERT'.
+          IF gs_aufk-phas2 EQ 'X'.
+            gs_icon-03 = '@5B@'.
+            gs_icon-05 = '@5B@'.
+          ELSE.
+
+            gs_icon-03 = '@5D@'.
+          ENDIF.
+      ENDCASE.
+    ENDLOOP.
+
+
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_zca_mard</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_zca_mard .
+  REFRESH gt_mard.
+
+  SELECT
+   matnr
+   werks
+   lgort
+   labst
+    FROM zca_mard
+    INTO CORRESPONDING FIELDS OF TABLE gt_mard
+    WHERE werks EQ p_werks
+      AND matnr IN s_matnr
+      AND lgort IN ( 'SL02', 'SL03' ).
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form check_matnr_stock</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM check_matnr_stock .
+  DATA lv_lack TYPE c. "부족한 자재 확인
+
+  " 자재 재고 조회
+  PERFORM select_zca_mard.
+
+  LOOP AT gt_display_100 INTO gs_display_100.
+    REFRESH gt_matnr.
+    CLEAR : gs_matnr, lv_lack.
+
+    call function <a href ="zca_pp_mrp/zca_pp_mrp.html">'ZCA_PP_MRP'</a>
+      EXPORTING
+        ev_matnr  = gs_display_100-matnr
+        ev_gsmng  = gs_display_100-gamng
+        ev_flag   = 'ADD'
+      IMPORTING
+        et_result = gt_matnr.
+
+    LOOP AT gt_matnr INTO gs_matnr .
+      READ TABLE gt_mard INTO gs_mard WITH KEY matnr = gs_matnr-matnr.
+
+      "생산 필요수량 &gt; 가용수량
+      IF gs_matnr-pdqty &gt; gs_mard-labst.
+        lv_lack = 'X'.
+        EXIT.
+      ELSE.
+        gs_display_100-icon = icon_led_green.
+      ENDIF.
+    ENDLOOP.
+
+    IF lv_lack EQ 'X'.
+      gs_display_100-icon = icon_led_yellow.
+    ENDIF.
+
+    MODIFY gt_display_100 FROM gs_display_100 TRANSPORTING icon .
+  ENDLOOP.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_data .
+  IF gt_display_100 IS NOT INITIAL.
+    "검색조건에 해당되는 데이터가 있으면 100 스크린 호출하여 alv로 조회
+    CALL SCREEN 0100.
+  ELSE.
+    "100 : 검색조건에 해당되는 데이터가 없습니다.
+    MESSAGE s100 DISPLAY LIKE 'E'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_zca_plpo</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_zca_plpo .
+  SELECT
+   plnnr
+   plnkn
+   arbpl
+   rstep
+   ltxa2
+    FROM zca_plpo
+    INTO CORRESPONDING FIELDS OF TABLE gt_plpo
+    WHERE loekz EQ space.
+
+  SORT gt_plpo BY plnkn.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_event_200</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_event_200 .
+  CREATE OBJECT go_event_handler.
+  SET HANDLER go_event_handler-&gt;handle_toolbar       FOR go_alv_grid_200.
+  SET HANDLER go_event_handler-&gt;handle_user_command  FOR go_alv_grid_200.
+  SET HANDLER go_event_handler-&gt;handle_button_click  FOR go_alv_grid_200.
+  SET HANDLER go_event_handler-&gt;handle_hotspot_click FOR go_alv_grid_200.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_toolbar</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_toolbar  USING p_object TYPE REF TO cl_alv_event_toolbar_set
+                           sender .
+
+  DATA ls_toolbar TYPE stb_button.
+
+  CLEAR ls_toolbar.
+  ls_toolbar-butn_type = 3.
+  APPEND ls_toolbar TO p_object-&gt;mt_toolbar.
+
+  CASE sender.
+    WHEN go_alv_grid_200.
+      CLEAR ls_toolbar.
+      ls_toolbar-function = 'HSTR'.
+<font color ="#0000FF">*  ls_toolbar-icon =</font>
+      ls_toolbar-text = '반제품 공정 시작'.
+      APPEND ls_toolbar TO p_object-&gt;mt_toolbar.
+
+    WHEN go_alv_grid_300.
+      CLEAR ls_toolbar.
+      ls_toolbar-function = 'FSTR'.
+<font color ="#0000FF">*  ls_toolbar-icon =</font>
+      ls_toolbar-text = '완제품 공정 시작'.
+      APPEND ls_toolbar TO p_object-&gt;mt_toolbar.
+  ENDCASE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_user_command</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_user_command  USING p_ucomm TYPE sy-ucomm.
+  DATA lv_lock1 TYPE c. "반제품 재고 확인
+  DATA lv_lock2 TYPE c. "완제품 재고 확인
+
+  LOOP AT gt_display_100 INTO gs_display_100 .
+    READ TABLE gt_aufk INTO gs_aufk WITH KEY matnr = gs_display_100-matnr.
+    IF gs_display_100-icon EQ icon_led_yellow.
+      CASE gs_aufk-mrart .
+        WHEN 'HALB'.
+          CLEAR lv_lock1.
+          lv_lock1 = 'X'.
+        WHEN 'FERT'.
+          CLEAR lv_lock2.
+          lv_lock2 = 'X'.
+      ENDCASE.
+    ENDIF.
+  ENDLOOP.
+
+  "반제품
+  CASE p_ucomm.
+    WHEN 'HSTR'.
+      IF ( gv_finish EQ space AND gt_display_200 IS NOT INITIAL ).
+        IF lv_lock1 EQ space.
+          CLEAR gv_finish.
+          "반제품 공정
+          PERFORM halb_production_step.
+
+          PERFORM refresh_alv_200.
+          gv_finish = 'X'. "생산완료 플래그
+          CLEAR gs_icon.
+          gs_icon-02 = '@5B@'.
+          gs_icon-03 = '@5D@'.
+          gs_icon-05 = '@5D@'.
+          LEAVE TO SCREEN 0100.
+        ELSE.
+          MESSAGE e109.
+        ENDIF.
+
+      ELSEIF gv_finish EQ 'X'.
+        MESSAGE s110 WITH gs_display_100-psday DISPLAY LIKE 'E'.
+      ENDIF.
+<font color ="#0000FF">*  ENDCASE.</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+      "완제품
+<font color ="#0000FF">*  CASE p_ucomm.</font>
+    WHEN 'FSTR' .
+      IF gv_unfinish EQ 'X'.   "완제품 생산 전
+        IF lv_lock2 EQ space . "재고 있으면 생산 가능
+          IF gv_ok EQ 'X' .    "반제품 생산되면 완제품 생산 가능
+
+            CLEAR : gv_unfinish, gv_finish.
+            "완제품 공정
+            PERFORM fert_production_step.
+
+            PERFORM refresh_alv_300.
+            gv_finish = 'X'. "생산완료 플래그
+            CLEAR gs_icon.
+            gs_icon-02 = '@5B@'.
+            gs_icon-03 = '@5B@'.
+            gs_icon-05 = '@5D@'.
+            LEAVE TO SCREEN 0100.
+
+          ELSE.
+            MESSAGE s111.
+          ENDIF.
+
+        ELSE.
+          MESSAGE e109.
+        ENDIF.
+
+      ELSEIF gv_finish EQ 'X'.
+        MESSAGE s110 WITH gs_display_100-psday DISPLAY LIKE 'E'.
+      ENDIF.
+  ENDCASE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form halb_production_step</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM halb_production_step .
+  DATA lt_plpo TYPE TABLE OF zca_plpo.
+  DATA lv_lines TYPE i.
+  DATA lv_aufnr TYPE zca_aufnr.
+
+
+  LOOP AT gt_display_200 INTO gs_display_200 WHERE icon EQ icon_led_yellow.
+    REFRESH gt_matnr.
+    CLEAR   gs_matnr.
+
+    lv_aufnr = gs_display_200-aufnr.
+
+    call function <a href ="zca_pp_mrp/zca_pp_mrp.html">'ZCA_PP_MRP'</a>
+      EXPORTING
+        ev_matnr  = gs_display_200-matnr
+        ev_gsmng  = gs_display_200-gamng
+        ev_flag   = 'ADD'
+      IMPORTING
+        et_result = gt_matnr.
+
+    "자재 수량 &금액 감소 자재, 회계문서 발행
+    PERFORM material_document USING gt_matnr gs_matnr
+                                    gt_mard  gs_mard
+                                    lv_aufnr
+                                    '1'.
+
+
+
+<font color ="#0000FF">**  "공정 시작 버튼 누르면 , 공정아이디에 맞춰 공정 아이템에서 단계별로 진행</font>
+    LOOP AT gt_plpo INTO gs_plpo WHERE plnnr EQ gs_display_200-plnnr.
+      APPEND gs_plpo TO lt_plpo.
+    ENDLOOP.
+    DESCRIBE TABLE lt_plpo LINES lv_lines.
+
+    DO lv_lines TIMES.
+      READ TABLE gt_plpo INTO gs_plpo WITH KEY  plnnr = gs_display_200-plnnr
+                                                rstep  = sy-index.
+
+      gs_display_200-icon  = icon_led_green.
+      gs_display_200-plnkn = gs_plpo-plnkn.
+      gs_display_200-ltxa2 = gs_plpo-ltxa2.
+      gs_display_200-rate  = 100.
+      INSERT gs_display_200 INTO gt_display_200.
+
+    ENDDO.
+    CLEAR : lt_plpo, lv_lines.
+  ENDLOOP.
+
+  IF sy-subrc EQ 0.
+    DELETE gt_display_200 WHERE icon EQ icon_led_yellow.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_alv_100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_alv_100 .
+  CALL METHOD go_alv_grid_100-&gt;refresh_table_display.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_alv_200</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_alv_200 .
+  CALL METHOD go_alv_grid_200-&gt;refresh_table_display.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form pop_up_message</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM pop_up_message  CHANGING pv_answer.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = '생산시작'(l01)
+      text_question         = '생산이 시작됩니다. [공정 시작] 버튼을 눌러 공정을 시작해주십시오.'(l02)
+      text_button_1         = '네'(l03)
+      text_button_2         = '아니요'(l04)
+      default_button        = '1'
+      display_cancel_button = space
+    IMPORTING
+      answer                = pv_answer.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form update_halb</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM update_halb USING pv_belnr TYPE zca_belnr.
+
+  UPDATE zca_aufk SET phas2 = 'X'
+                      belnr = pv_belnr
+                      aedat = sy-datum
+                      aezet = sy-uzeit
+                      aenam = sy-uname
+                  WHERE aufnr = gs_display_200-aufnr
+                   AND  matnr = gs_display_200-matnr.
+
+  IF sy-subrc EQ 0.
+    COMMIT WORK.
+    MESSAGE s112.
+    gv_ok = 'X'.
+
+    LOOP AT gt_display_300 INTO gs_display_300.
+      UPDATE zca_aufk SET phas1 = 'X'
+                      WHERE aufnr = gs_display_300-aufnr
+                        AND matnr = gs_display_300-matnr.
+    ENDLOOP.
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE e113.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form fert_production_step</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM fert_production_step .
+  DATA lt_plpo TYPE TABLE OF zca_plpo.
+  DATA lv_lines TYPE i.
+  DATA lv_aufnr TYPE zca_aufnr.
+  DATA lv_belnr TYPE zca_belnr.
+
+  LOOP AT gt_display_300 INTO gs_display_300 WHERE icon EQ icon_led_yellow.
+
+    REFRESH gt_matnr.
+    CLEAR gs_matnr.
+
+    lv_aufnr = gs_display_300-aufnr.
+
+    call function <a href ="zca_pp_mrp/zca_pp_mrp.html">'ZCA_PP_MRP'</a>
+      EXPORTING
+        ev_matnr  = gs_display_300-matnr
+        ev_gsmng  = gs_display_300-gamng
+        ev_flag   = 'ADD'
+      IMPORTING
+        et_result = gt_matnr.
+
+    "자재 수량 &금액 감소 자재, 회계문서 발행
+    PERFORM material_document_2 USING gt_matnr gs_matnr
+                                    gt_mard  gs_mard
+                                    lv_aufnr
+                                    '1'.
+
+
+    LOOP AT gt_plpo INTO gs_plpo WHERE plnnr EQ gs_display_300-plnnr.
+      APPEND gs_plpo TO lt_plpo.
+    ENDLOOP.
+    DESCRIBE TABLE lt_plpo LINES lv_lines.
+
+    DO lv_lines TIMES.
+      READ TABLE gt_plpo INTO gs_plpo WITH KEY  plnnr = gs_display_300-plnnr
+                                                rstep  = sy-index.
+
+      gs_display_300-icon  = icon_led_green.
+      gs_display_300-plnkn = gs_plpo-plnkn.
+      gs_display_300-ltxa2 = gs_plpo-ltxa2.
+      gs_display_300-rate  = 100.
+      INSERT gs_display_300 INTO gt_display_300.
+    ENDDO.
+    CLEAR : lt_plpo, lv_lines.
+  ENDLOOP.
+
+  IF sy-subrc EQ 0.
+    DELETE gt_display_300 WHERE icon EQ icon_led_yellow.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form variant_200</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------**</font>
+FORM variant_200 .
+  CLEAR gs_variant.
+  gs_variant-report = sy-cprog.
+  gs_variant-handle = '200'.
+  gv_save = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_300 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_300 OUTPUT.
+  IF go_container_300 IS INITIAL.
+
+    CREATE OBJECT go_container_300
+      EXPORTING
+        container_name = 'CCON3'.
+
+    CREATE OBJECT go_alv_grid_300
+      EXPORTING
+        i_parent = go_container_300.
+
+    PERFORM layout_200.
+    PERFORM variant_200.
+    PERFORM fieldcatalog_200.
+    PERFORM handle_event_300.
+    PERFORM display_alv_300.
+  ELSE.
+    PERFORM refresh_alv_300.
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_300</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_300 .
+  CALL METHOD go_alv_grid_300-&gt;set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZCA_PPS040'
+      is_variant       = gs_variant
+      i_save           = gv_save
+<font color ="#0000FF">*     i_default        = 'X'</font>
+      is_layout        = gs_layout
+<font color ="#0000FF">*     it_toolbar_excluding = gt_toolbar</font>
+    CHANGING
+      it_outtab        = gt_display_300
+      it_fieldcatalog  = gt_fieldcat.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_alv_300</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_alv_300 .
+  CALL METHOD go_alv_grid_300-&gt;refresh_table_display.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_event_300</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_event_300 .
+  CREATE OBJECT go_event_handler.
+  SET HANDLER go_event_handler-&gt;handle_toolbar       FOR go_alv_grid_300.
+  SET HANDLER go_event_handler-&gt;handle_user_command  FOR go_alv_grid_300.
+  SET HANDLER go_event_handler-&gt;handle_button_click  FOR go_alv_grid_300.
+  SET HANDLER go_event_handler-&gt;handle_hotspot_click FOR go_alv_grid_300.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form update_fert</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM update_fert USING pv_belnr TYPE zca_belnr.
+  UPDATE zca_aufk SET
+                       phas2 = 'X'  "생산 완료
+                       belnr = pv_belnr
+                       aedat = sy-datum
+                       aezet = sy-uzeit
+                       aenam = sy-uname
+                   WHERE aufnr = gs_display_300-aufnr
+                    AND  matnr = gs_display_300-matnr.
+
+  IF sy-subrc EQ 0.
+    COMMIT WORK.
+    MESSAGE s114.
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE e113.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_button_click</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_button_click  USING    p_es_col_id
+                                   p_es_row_no.
+
+  CASE tabstrip-activetab.
+    WHEN 'TAB1'.
+      IF gv_finish EQ 'X'.
+        SUBMIT zca_pp120
+        WITH pa_odate EQ s_psday-low AND RETURN.
+        PERFORM check_matnr_stock.
+        PERFORM refresh_alv_100.
+
+      ELSE.
+        MESSAGE s115.
+      ENDIF.
+
+    WHEN 'TAB2'.
+      IF gv_unfinish EQ 'X'.
+        MESSAGE s115.
+        EXIT.
+      ELSE.
+        SUBMIT zca_pp120
+        WITH pa_odate EQ s_psday-low AND RETURN.
+        PERFORM select_zca_aufk.
+        LEAVE TO SCREEN 0100.
+      ENDIF.
+  ENDCASE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form material_document</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM material_document  USING    pt_matnr LIKE gt_matnr
+                                 ps_matnr LIKE gs_matnr
+                                 pt_mard  LIKE gt_mard
+                                 ps_mard  LIKE gs_mard
+                                 pv_aufnr TYPE zca_aufnr
+                        VALUE(pv_flag).
+
+  DATA lv_lgort TYPE zca_lgort.
+  DATA lv_subrc TYPE sy-subrc.
+  "mm function
+  DATA lv_price TYPE zca_dmbtr.
+
+  "fi function
+  DATA lv_belnr TYPE zca_belnr.
+  DATA lt_mat  TYPE zca_mat .
+  DATA ls_mat  TYPE zca_mat_line.
+
+
+
+  CLEAR ps_matnr.
+  LOOP AT pt_matnr INTO ps_matnr.
+
+<font color ="#0000FF">*    자재별 저장창고 읽어옴</font>
+    READ TABLE pt_mard INTO ps_mard WITH KEY matnr = ps_matnr-matnr.
+
+    IF sy-subrc EQ 0.
+      lv_lgort = ps_mard-lgort.
+
+      "자재문서 발행
+      call function <a href ="zca_mm_minuspp_batch/zca_mm_minuspp_batch.html">'ZCA_MM_MINUSPP_BATCH'</a>
+        EXPORTING
+          iv_matnr = ps_matnr-matnr     " 자재코드
+          iv_btqty = ps_matnr-pdqty     " 수량
+          iv_werks = 'P001'             " 플랜트 ID
+          iv_lgort = lv_lgort           " 창고 코드 (저장 위치)
+          iv_bwart = '261'              " 이동 유형 코드
+        IMPORTING
+          ev_price = lv_price.
+
+
+      IF lv_price IS NOT INITIAL.
+        COMMIT WORK.
+        MOVE-CORRESPONDING ps_mard TO ls_mat.
+        ls_mat-waers = 'KRW'.
+        ls_mat-price = lv_price.
+        APPEND ls_mat TO lt_mat.
+        lv_subrc = 0.
+      ELSE.
+        ROLLBACK WORK.
+        lv_subrc = 4.
+      ENDIF.
+
+    ENDIF.
+  ENDLOOP.
+
+  IF lv_subrc EQ 0.
+
+    "회계문서 발행
+    call function <a href ="zca_fi_post_pp_docu/zca_fi_post_pp_docu.html">'ZCA_FI_POST_PP_DOCU'</a>
+      EXPORTING
+        iv_flag  = pv_flag
+        iv_psdat = s_psday-low
+        it_mat   = lt_mat
+        iv_aufnr = pv_aufnr
+      IMPORTING
+        ev_belnr = lv_belnr.
+
+<font color ="#0000FF">*     생산오더 테이블 업데이트(반제품)</font>
+    PERFORM update_halb USING lv_belnr.
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form finished_production</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM finished_production .
+  DATA lt_plpo LIKE gt_plpo.
+  DATA lv_lines TYPE i.
+
+  REFRESH : gt_display_200 , gt_display_300.
+  CLEAR : gs_display_200 , gs_display_300, gv_finish, gv_unfinish.
+
+  LOOP AT gt_aufk INTO gs_aufk .
+
+    IF gs_aufk-phas2 EQ 'X'.
+
+      LOOP AT gt_plpo INTO gs_plpo WHERE plnnr EQ gs_aufk-plnnr.
+        APPEND gs_plpo TO lt_plpo.
+      ENDLOOP.
+      DESCRIBE TABLE lt_plpo LINES lv_lines.
+
+      DO lv_lines TIMES.
+        READ TABLE lt_plpo INTO gs_plpo WITH KEY  plnnr = gs_aufk-plnnr
+                                                  rstep = sy-index.
+
+        CASE gs_aufk-mrart.
+          WHEN 'HALB'.
+            gs_display_200-icon  = icon_led_green.
+            gs_display_200-plnnr = gs_aufk-plnnr.
+            gs_display_200-plnkn = gs_plpo-plnkn.
+            gs_display_200-ltxa2 = gs_plpo-ltxa2.
+            gs_display_200-matnr = gs_aufk-matnr.
+            gs_display_200-maktx = gs_aufk-maktx.
+            gs_display_200-gamng = gs_aufk-gamng.
+            gs_display_200-meins = gs_aufk-meins.
+            gs_display_200-rate  = 100.
+            gs_display_200-aufnr = gs_aufk-aufnr.
+            gs_display_200-button = icon_display_text.
+            APPEND  gs_display_200 TO gt_display_200.
+            gv_ok = 'X'.
+            gv_finish = 'X'.
+          WHEN 'FERT'.
+            gs_display_300-icon  = icon_led_green.
+            gs_display_300-plnnr = gs_aufk-plnnr.
+            gs_display_300-plnkn = gs_plpo-plnkn.
+            gs_display_300-ltxa2 = gs_plpo-ltxa2.
+            gs_display_300-matnr = gs_aufk-matnr.
+            gs_display_300-maktx = gs_aufk-maktx.
+            gs_display_300-gamng = gs_aufk-gamng.
+            gs_display_300-meins = gs_aufk-meins.
+            gs_display_300-rate  = 100.
+            gs_display_300-aufnr  = gs_aufk-aufnr.
+            gs_display_300-button = icon_display_text.
+            APPEND  gs_display_300 TO gt_display_300.
+        ENDCASE.
+      ENDDO.
+      CLEAR : lt_plpo, lv_lines.
+
+    ELSE.
+      CASE gs_aufk-mrart.
+        WHEN 'FERT'.
+          gs_display_300-icon  = icon_led_yellow.
+          gs_display_300-plnnr = gs_aufk-plnnr.
+          gs_display_300-plnkn = gs_plpo-plnkn.
+          gs_display_300-ltxa2 = gs_plpo-ltxa2.
+          gs_display_300-matnr = gs_aufk-matnr.
+          gs_display_300-maktx = gs_aufk-maktx.
+          gs_display_300-gamng = gs_aufk-gamng.
+          gs_display_300-meins = gs_aufk-meins.
+          gs_display_300-rate  = 0.
+          gs_display_300-aufnr  = gs_aufk-aufnr.
+          gs_display_300-button = icon_display_text.
+          APPEND  gs_display_300 TO gt_display_300.
+          gv_unfinish = 'X'.
+      ENDCASE.
+    ENDIF.
+  ENDLOOP.
+
+  CLEAR  gs_icon-03.
+
+  IF gt_display_200 IS INITIAL.
+    CLEAR gs_icon-03.
+  ELSEIF ( gv_ok EQ 'X' AND gv_finish EQ 'X' AND gv_unfinish EQ 'X' ).
+    CLEAR gs_icon-03.
+    gs_icon-03 = '@5C@'.
+  ELSE.  "IF ( gv_ok EQ 'X' AND gv_finish EQ 'X' ).
+    CLEAR gs_icon-03.
+    gs_icon-03 = '@5B@'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form production_start</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM production_start .
+  "생산시작 버튼 제어 - 생산중이면 생산시작으로 넘어가지 않도록
+  DATA lv_lock TYPE c.
+  "메시지 팝업 변수
+  DATA lv_answer TYPE c.
+
+  IF gv_finish EQ space. "생산 전이면 생산 시작.
+
+    IF lv_lock NE 'X'.   "생산 시작 전만 팝업 메시지 출력
+      PERFORM pop_up_message USING lv_answer.
+      "메시지 팝업에서 '네'를 선택하면 생산 시작
+      IF lv_answer EQ '1'.
+
+        LOOP AT gt_display_100 INTO gs_display_100.
+
+          "자재 유형 읽어오기
+          READ TABLE gt_aufk INTO gs_aufk WITH KEY aufnr = gs_display_100-aufnr.
+          IF sy-subrc EQ 0.
+            IF gs_display_100-icon EQ icon_led_green. "자재 입고됨
+              CASE gs_aufk-mrart.
+                WHEN 'HALB'.  "반제품
+                  "반제품 먼저 생산 PHAS1 플래그 업데이트
+                  UPDATE zca_aufk SET phas1 = 'X'
+                                      aedat = sy-datum
+                                      aezet = sy-uzeit
+                                      aenam = sy-uname
+                                   WHERE aufnr EQ gs_display_100-aufnr
+                                     AND matnr EQ gs_display_100-matnr.
+
+                  gs_display_200-icon   = icon_led_yellow.
+                  gs_display_200-aufnr  = gs_display_100-aufnr.
+                  gs_display_200-matnr  = gs_display_100-matnr.
+                  gs_display_200-maktx  = gs_display_100-maktx.
+                  gs_display_200-gamng  = gs_display_100-gamng.
+                  gs_display_200-meins  = gs_display_100-meins.
+                  gs_display_200-plnnr  = gs_display_100-plnnr.
+                  gs_display_200-plnkn  = ''.
+                  gs_display_200-ltxa2  = ''.
+                  gs_display_200-rate   = 0.
+                  gs_display_200-button = icon_display_text.
+                  APPEND gs_display_200 TO gt_display_200.
+                  lv_lock = 'X'.
+
+<font color ="#0000FF">*                  gs_display_300-icon   = icon_led_yellow.</font>
+<font color ="#0000FF">*                  gs_display_300-aufnr  = gs_display_100-aufnr.</font>
+<font color ="#0000FF">*                  gs_display_300-matnr  = gs_display_100-matnr.</font>
+<font color ="#0000FF">*                  gs_display_300-maktx  = gs_display_100-maktx.</font>
+<font color ="#0000FF">*                  gs_display_300-gamng  = gs_display_100-gamng.</font>
+<font color ="#0000FF">*                  gs_display_300-meins  = gs_display_100-meins.</font>
+<font color ="#0000FF">*                  gs_display_300-plnnr  = gs_display_100-plnnr.</font>
+<font color ="#0000FF">*                  gs_display_300-plnkn  = ''.</font>
+<font color ="#0000FF">*                  gs_display_300-ltxa2  = ''.</font>
+<font color ="#0000FF">*                  gs_display_300-rate   = 0.</font>
+<font color ="#0000FF">*                  gs_display_300-button = icon_display_text.</font>
+<font color ="#0000FF">*                  APPEND gs_display_300 TO gt_display_300.</font>
+              ENDCASE.
+
+            ELSEIF gs_display_100-icon EQ icon_led_yellow.
+              CASE gs_aufk-mrart.
+                WHEN 'HALB'.  "반제품
+                  MESSAGE e109.
+
+                  REFRESH: gt_display_200, gt_display_300.
+                  CLEAR: gs_display_200, gs_display_300.
+                  RETURN.
+              ENDCASE.
+            ENDIF.
+          ENDIF.
+        ENDLOOP.
+        CLEAR gs_icon.
+        gs_icon-02  = '@5D@'. "icon_led-yellow
+        gs_icon-03 = '@5D@'.  "icon_led-yellow
+      ELSE.
+        MESSAGE e116.
+      ENDIF.
+
+    ELSE.
+
+      MESSAGE e117.
+    ENDIF.
+  ELSE.
+    MESSAGE e118.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_hotspot_click</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_hotspot_click USING p_row_id    TYPE lvc_s_row
+                                p_column_id TYPE lvc_s_col
+                                 sender.
+
+  "alv 객체 별로 이벤트가 발생할 객체 지정
+  CASE sender.
+    WHEN go_alv_grid_100.
+      READ TABLE gt_display_100 INTO gs_display_100 INDEX p_row_id-index.
+
+      IF sy-subrc EQ 0.
+        CASE p_column_id.
+          WHEN 'STLNR'.
+            PERFORM submit_to_bom_program USING gs_display_100.
+
+          WHEN 'WERKS'.
+            PERFORM select_werks USING gs_display_100.
+            CALL SCREEN 0110 STARTING AT 80 7.
+        ENDCASE.
+      ENDIF.
+
+    WHEN go_alv_grid_200.
+      READ TABLE gt_display_200 INTO gs_display_200 INDEX p_row_id-index.
+
+      IF sy-subrc EQ 0.
+        CASE p_column_id.
+          WHEN 'PLNNR'.
+            PERFORM call_bdc_to_routing_program  USING gs_display_200.
+        ENDCASE.
+      ENDIF.
+
+    WHEN go_alv_grid_300.
+      READ TABLE gt_display_300 INTO gs_display_300 INDEX p_row_id-index.
+
+      IF sy-subrc EQ 0.
+        CASE p_column_id.
+          WHEN 'PLNNR'.
+            PERFORM call_bdc_to_routing_program USING gs_display_300.
+        ENDCASE.
+      ENDIF.
+
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form submit_to_bom_program</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM submit_to_bom_program USING ps_display_100 LIKE gs_display_100.
+<font color ="#0000FF">*  호출하는 프로그램의 검색조건에 파라미터 값을 넘겨주기 위하 변수</font>
+  DATA: lt_matnr TYPE RANGE OF zca_plko,
+        lt_werks TYPE RANGE OF zca_plko,
+        ls_range LIKE LINE OF lt_matnr.
+
+  CLEAR ls_range.
+  ls_range-sign = 'I'.
+  ls_range-option = 'EQ'.
+  ls_range-low = ps_display_100-werks.
+  APPEND ls_range TO lt_werks.
+
+  CLEAR ls_range.
+  ls_range-sign = 'I'.
+  ls_range-option = 'EQ'.
+  ls_range-low =  ps_display_100-matnr.
+  APPEND ls_range TO lt_matnr.
+
+  " SUBMIT 실행 (AND RETURN 붙이면 제어가 돌아옴)
+  SUBMIT zca_pp020
+    WITH s_werks IN lt_werks
+    WITH s_matnr IN lt_matnr
+    AND RETURN.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_event_100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_event_100 .
+  CREATE OBJECT go_event_handler.
+  SET HANDLER go_event_handler-&gt;handle_hotspot_click FOR go_alv_grid_100.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_werks</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_werks  USING ps_display_100 LIKE gs_display_100.
+  SELECT SINGLE
+      werks
+      bukrs
+      ptype
+      pname
+      padrs
+      phone
+      FROM zca_t001w
+      INTO CORRESPONDING FIELDS OF zca_t001w
+      WHERE werks EQ ps_display_100-werks
+       AND  loekz EQ space.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form call_bdc_to_routing_program</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM call_bdc_to_routing_program  USING ps_display TYPE zca_pps040.
+
+<font color ="#0000FF">*  DATA: lt_plnnr TYPE RANGE OF zca_plko,</font>
+<font color ="#0000FF">*        lt_werks TYPE RANGE OF zca_plko,</font>
+<font color ="#0000FF">*        ls_range LIKE LINE OF lt_plnnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR ls_range.</font>
+<font color ="#0000FF">*  ls_range-sign = 'I'.</font>
+<font color ="#0000FF">*  ls_range-option = 'EQ'.</font>
+<font color ="#0000FF">*  ls_range-low = ps_display-plnnr.</font>
+<font color ="#0000FF">*  APPEND ls_range TO lt_plnnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  SUBMIT zca_pp030</font>
+<font color ="#0000FF">*  WITH p_werks EQ p_werks</font>
+<font color ="#0000FF">*  WITH s_plnnr IN lt_plnnr</font>
+<font color ="#0000FF">*  AND RETURN.</font>
+
+  DATA: lt_bdcdata TYPE TABLE OF bdcdata,
+        ls_bdcdata TYPE          bdcdata,
+        ls_opt     TYPE          ctu_params.
+
+  ls_opt-dismode = 'E'.     " 에러 발생 시 화면 표시
+<font color ="#0000FF">*  ls_opt-updmode = ''.</font>
+  ls_opt-racommit = abap_on.
+
+  APPEND VALUE #( program = 'ZCA_PP030' dynpro = '100' dynbegin = 'X' ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'P_WERKS' fval = p_werks ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'S_PLNNR-LOW' fval = ps_display-plnnr ) TO lt_bdcdata.
+  APPEND VALUE #( program = 'ZCA_PP030' dynpro = '0100' dynbegin = 'X' ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'BDC_OKCODE' fval = '=BUT1' ) TO lt_bdcdata.
+
+  CALL TRANSACTION 'ZCAPP030' USING lt_bdcdata OPTIONS FROM ls_opt.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_new_ok_code</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_new_ok_code USING p_okcode TYPE sy-ucomm.
+  CALL METHOD cl_gui_cfw=&gt;set_new_ok_code
+    EXPORTING
+      new_code = p_okcode.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form submit_to_po_program</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM submit_to_po_program USING ps_display_100 LIKE gs_display_100.
+  SUBMIT zca_pp100
+  WITH p_werks EQ p_werks
+  WITH p_plnum EQ ps_display_100-plnum
+  AND RETURN.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form material_document_2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM material_document_2   USING pt_matnr LIKE gt_matnr
+                                 ps_matnr LIKE gs_matnr
+                                 pt_mard  LIKE gt_mard
+                                 ps_mard  LIKE gs_mard
+                                 pv_aufnr TYPE zca_aufnr
+                        VALUE(pv_flag).
+
+  DATA lv_lgort TYPE zca_lgort.
+  DATA lv_subrc TYPE sy-subrc.
+  "mm function
+  DATA lv_price TYPE zca_dmbtr.
+
+  "fi function
+  DATA lv_belnr TYPE zca_belnr.
+  DATA lt_mat  TYPE zca_mat .
+  DATA ls_mat  TYPE zca_mat_line.
+
+
+
+  CLEAR ps_matnr.
+  LOOP AT pt_matnr INTO ps_matnr.
+
+    "자재별 저장창고 읽어옴
+    READ TABLE pt_mard INTO ps_mard WITH KEY matnr = ps_matnr-matnr.
+
+    IF sy-subrc EQ 0.
+      lv_lgort = ps_mard-lgort.
+
+      "자재문서 발행
+      call function <a href ="zca_mm_minuspp_batch/zca_mm_minuspp_batch.html">'ZCA_MM_MINUSPP_BATCH'</a>
+        EXPORTING
+          iv_matnr = ps_matnr-matnr     " 자재코드
+          iv_btqty = ps_matnr-pdqty     " 수량
+          iv_werks = 'P001'             " 플랜트 ID
+          iv_lgort = lv_lgort           " 창고 코드 (저장 위치)
+          iv_bwart = '261'              " 이동 유형 코드
+        IMPORTING
+          ev_price = lv_price.
+
+
+      IF lv_price IS NOT INITIAL.
+        COMMIT WORK.
+        MOVE-CORRESPONDING ps_mard TO ls_mat.
+        ls_mat-waers = 'KRW'.
+        ls_mat-price = lv_price.
+        APPEND ls_mat TO lt_mat.
+        lv_subrc = 0.
+      ELSE.
+        ROLLBACK WORK.
+        lv_subrc = 4.
+      ENDIF.
+
+    ENDIF.
+  ENDLOOP.
+
+  IF lv_subrc EQ 0.
+
+    "회계문서 발행
+    call function <a href ="zca_fi_post_pp_docu/zca_fi_post_pp_docu.html">'ZCA_FI_POST_PP_DOCU'</a>
+      EXPORTING
+        iv_flag  = pv_flag
+        iv_psdat = s_psday-low
+        it_mat   = lt_mat
+        iv_aufnr = pv_aufnr
+      IMPORTING
+        ev_belnr = lv_belnr.
+
+    "생산오더 테이블 업데이트(완제품)
+    PERFORM update_fert USING lv_belnr.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form call_bdc_pl_program</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM call_bdc_pl_program .
+
+  DATA: lt_bdcdata TYPE TABLE OF bdcdata,
+        ls_bdcdata TYPE          bdcdata,
+        ls_opt     TYPE          ctu_params.
+
+  ls_opt-dismode = 'E'.     " 에러 발생 시 화면 표시
+  ls_opt-racommit = abap_on.
+
+  APPEND VALUE #( program = 'ZCA_PP060' dynpro = '1000' dynbegin = 'X' ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'PA_PLANT' fval = p_werks ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'BDC_OKCODE' fval = '=ONLI' ) TO lt_bdcdata.
+  APPEND VALUE #( program = 'ZCA_PP060' dynpro = '0100' dynbegin = 'X' ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'ZCA_PPT010-PLNUM' fval = gs_display_100-plnum ) TO lt_bdcdata.
+  APPEND VALUE #( fnam = 'BDC_OKCODE' fval = '=SEARCH' ) TO lt_bdcdata.
+
+  CHECK lt_bdcdata IS NOT INITIAL.
+
+  CALL TRANSACTION 'ZCAPP060' USING lt_bdcdata OPTIONS FROM ls_opt.
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

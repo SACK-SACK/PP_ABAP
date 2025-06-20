@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP050_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP050_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP050_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*TREE ALV</font>
+TYPES: NODE_TABLE_TYPE  LIKE STANDARD TABLE OF MTREESNODE WITH DEFAULT KEY.
+DATA: GO_TREE_CON TYPE REF TO CL_GUI_DOCKING_CONTAINER, "컨테이너
+      GO_TREE     TYPE REF TO CL_GUI_SIMPLE_TREE.      "트리 컨테이너 참조변수
+
+<font color ="#0000FF">*ALV 관련 데이터 오브젝트</font>
+DATA: GO_CONTAINER      TYPE REF TO CL_GUI_CUSTOM_CONTAINER,      " 납기 정보 컨테이너
+      GO_ALV_GRID       TYPE REF TO CL_GUI_ALV_GRID,              " 납기 정보ALV GRID
+      GO_CONTAINER_PLAN TYPE REF TO CL_GUI_CUSTOM_CONTAINER,      " 생산계획 Custom Container
+      GO_ALV_GRID_PLAN  TYPE REF TO CL_GUI_ALV_GRID,              " 생산계획 ALV GRID
+      GT_TOOLBAR        TYPE UI_FUNCTIONS,
+      OK_CODE           TYPE SY-UCOMM,
+      ST_ICON           TYPE ICONS-TEXT,
+      STATUS_ICON       TYPE CHAR30 VALUE ICON_LED_RED,
+      STATUS_TEXT       TYPE CHAR30 VALUE '계획 생성 전'.
+
+TABLES: ZCA_PPT010.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA GT_FCAT TYPE LVC_T_FCAT.
+DATA GS_FCAT TYPE LVC_S_FCAT.
+<font color ="#0000FF">* ALV Layout</font>
+DATA GS_LAYO TYPE LVC_S_LAYO.
+
+<font color ="#0000FF">* TREE를 만들기 위해 필요한 필드</font>
+DATA GS_INFO TYPE ZCA_DATE.
+DATA GT_INFO LIKE TABLE OF GS_INFO.
+
+<font color ="#0000FF">* ALV_GRID에 보일 데이터를 담는 변수</font>
+DATA: BEGIN OF GS_DATA,
+        DELIV_DATE TYPE ZCA_SDT070-DELIV_DATE,
+        MATNR      TYPE ZCA_SDT070-MATNR,
+        MAKTX      TYPE ZCA_MAKT-MAKTX,
+        DELIV_QTY  TYPE ZCA_SDT070-DELIV_QTY,
+        MEINS      TYPE ZCA_SDT070-MEINS,
+      END OF GS_DATA.
+DATA GT_DATA LIKE TABLE OF GS_DATA.
+
+<font color ="#0000FF">* 생산계획을 생성할 데이터를 담을 변수</font>
+DATA: GT_HEADER TYPE TABLE OF ZCA_PPT010,
+      GS_HEADER TYPE          ZCA_PPT010,
+      GT_ITEM   TYPE TABLE OF ZCA_PPT020,
+      GS_ITEM   TYPE          ZCA_PPT020.
+
+<font color ="#0000FF">* 생산계획 ALV에 보여 줄 데이터를 담을 변수</font>
+DATA: BEGIN OF GS_PLAN_DATA,
+        PLNUM TYPE ZCA_PPT020-PLNUM,
+        MATNR TYPE ZCA_PPT020-MATNR,
+        MAKTX TYPE ZCA_MAKT-MAKTX,
+        GSMNG TYPE ZCA_PPT020-GSMNG,
+        MEINS TYPE ZCA_PPT020-MEINS,
+      END OF GS_PLAN_DATA,
+      GT_PLAN_DATA LIKE TABLE OF GS_PLAN_DATA.
+
+<font color ="#0000FF">* 생산계획 생성을 위한 날짜를 담을 변수</font>
+DATA GS_YMW TYPE ZCA_DATE_FIELDS.
+
+DATA: GV_QTY1 TYPE ZCA_SDT070-DELIV_QTY,
+      GV_QTY2 TYPE ZCA_SDT070-DELIV_QTY,
+      GV_QTY3 TYPE ZCA_SDT070-DELIV_QTY,
+      GV_QTY4 TYPE ZCA_SDT070-DELIV_QTY,
+      GV_QTY5 TYPE ZCA_SDT070-DELIV_QTY,
+      GV_QTY6 TYPE ZCA_SDT070-DELIV_QTY,
+      GV_UNT1 TYPE ZCA_SDT070-MEINS,
+      GV_UNT2 TYPE ZCA_SDT070-MEINS,
+      GV_UNT3 TYPE ZCA_SDT070-MEINS,
+      GV_UNT4 TYPE ZCA_SDT070-MEINS,
+      GV_UNT5 TYPE ZCA_SDT070-MEINS,
+      GV_UNT6 TYPE ZCA_SDT070-MEINS.
+
+DATA: BEGIN OF GS_COLLECT_DATA,
+        MATNR TYPE ZCA_PPT020-MATNR,
+        GSMNG TYPE ZCA_PPT020-GSMNG,
+      END OF GS_COLLECT_DATA,
+      GT_COLLECT_DATA LIKE TABLE OF GS_COLLECT_DATA.
+
+DATA: BEGIN OF GS_TOTAL_QTY,
+        MATNR     TYPE ZCA_SDT070-MATNR,
+        DELIV_QTY TYPE ZCA_SDT070-DELIV_QTY,
+        UNIT      TYPE ZCA_SDT070-MEINS,
+      END OF GS_TOTAL_QTY,
+      GT_TOTAL_QTY LIKE TABLE OF GS_TOTAL_QTY.
+
+<font color ="#0000FF">* 데이터 하나 조회할 때 값이 있는지 확인하기 위한 Flag</font>
+<font color ="#0000FF">* 생산계획이 있다면 GV_CHECK_1ROW = 'X'</font>
+<font color ="#0000FF">*   생산계획 생성 버튼 표시 안함</font>
+<font color ="#0000FF">* 생산계획이 없다면 GV_CHECK_1ROW = ' '.</font>
+<font color ="#0000FF">*   생산계획 생성 버튼 표시</font>
+DATA GV_CHECK_1ROW TYPE C.
+DATA GV_CREATABLE_PLAN TYPE C.
+
+DATA GV_TITLE_SCR100 TYPE STRING.
+
+DATA GT_CHECK_PPT010 TYPE TABLE OF ZCA_PPT010.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

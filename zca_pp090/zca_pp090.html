@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP090</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP090</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [PP] 생산오더 전환(생성)</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_PP090</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& 생산오더 전환(생성) 프로그램</font>
+<font color ="#0000FF">*& 개발자 : 김영은</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zca_pp090 MESSAGE-ID zca_msg.
+
+include <a href ="zca_pp090_top.html">zca_pp090_top</a>.
+include <a href ="zca_pp090_cls.html">zca_pp090_cls</a>.
+include <a href ="zca_pp090_pbo.html">zca_pp090_pbo</a>.
+include <a href ="zca_pp090_pai.html">zca_pp090_pai</a>.
+include <a href ="zca_pp090_f01.html">zca_pp090_f01</a>.
+
+START-OF-SELECTION.
+  PERFORM select_data.
+  CALL SCREEN 0100.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 0100 --&gt; [PP] 생산오더 생성</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* L01 생산오더 전환</font>
+<font color ="#0000FF">* L02 생산오더로 전환 하시겠습니까?</font>
+<font color ="#0000FF">* L03 네</font>
+<font color ="#0000FF">* L04 아니요</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*100   검색조건에 해당되는 데이터가 없습니다.</font>
+<font color ="#0000FF">*103   생산오더 전환을 취소하였습니다.</font>
+<font color ="#0000FF">*105   선택된 생산계획이 없습니다. 다시 선택해 주십시오.</font>
+<font color ="#0000FF">*106   생산오더가 생성되었습니다.</font>
+<font color ="#0000FF">*107   생산오더 생성에 실패하였습니다.</font>
+<font color ="#0000FF">*108   이미 생산오더가 생성된 생산계획입니다.</font>
+<font color ="#0000FF">*119   미승인 생산계획입니다. 생산오더로 전환할 수 없습니다</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

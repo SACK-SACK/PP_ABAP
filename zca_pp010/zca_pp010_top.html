@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP010_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP010_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP010_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP010_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES : zca_stko,
+         zca_stpo,
+         zca_mara,
+         zca_makt,
+         zca_t001w.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*constants 변수</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CONSTANTS: gc_updkz_i TYPE updkz VALUE 'I'. "Insert
+CONSTANTS: gc_updkz_d TYPE updkz VALUE 'D'. "Delete
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*golbal variable</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA ok_code TYPE sy-ucomm.
+DATA gv_lock TYPE c.               "화면 입력필드 잠금변수
+DATA gv_bomid TYPE zca_stko-stlnr. "BOMID 함수에서 id 값을 받아오는 변수
+DATA gv_stlnr TYPE zca_stko-stlnr.
+
+<font color ="#0000FF">**--------------------------------------------------------------------*</font>
+<font color ="#0000FF">**bom header table - 데이터 조회용</font>
+<font color ="#0000FF">**--------------------------------------------------------------------*</font>
+DATA : BEGIN OF gs_stko.
+         include structure <a href ="zca_stko/dictionary-zca_stko.html">zca_stko</a>.
+DATA :   maktx TYPE zca_makt-maktx,    "자재명
+         mrart TYPE zca_mara-mrart,    "자재유형
+         meins TYPE zca_mara-meins,    "자재단위
+       END OF gs_stko.
+
+DATA gt_stko LIKE TABLE OF gs_stko.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*bom item ALV structure & internal table</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA : BEGIN OF gs_display.
+         include structure <a href ="zca_stpo/dictionary-zca_stpo.html">zca_stpo</a>.
+DATA :   maktx TYPE zca_makt-maktx,    "자재명
+         messg TYPE bapi_msg,          "메시지
+<font color ="#0000FF">*         updkz TYPE updkz_d,           "alv 데이터 변경 유무 확인</font>
+       END OF gs_display.
+
+DATA gt_display LIKE TABLE OF gs_display.
+
+
+
+<font color ="#0000FF">*ALV</font>
+DATA go_container TYPE REF TO cl_gui_custom_container.
+DATA go_alv_grid  TYPE REF TO cl_gui_alv_grid.  "BOM ITEM 생성 ALV
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA gs_layout  TYPE lvc_s_layo.
+DATA gs_variant TYPE disvariant.
+DATA gv_save    TYPE c.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA gt_fieldcat TYPE lvc_t_fcat.
+DATA gs_fieldcat TYPE lvc_s_fcat.
+
+<font color ="#0000FF">*ALV toolbar 제거</font>
+DATA gt_toolbar TYPE ui_functions.
+
+DATA : lt_modified_rows LIKE TABLE OF gs_display.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

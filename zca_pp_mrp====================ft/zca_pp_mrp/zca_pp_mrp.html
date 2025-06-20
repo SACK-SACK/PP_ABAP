@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP_MRP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZCA_PP_MRP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  MRP Function</b></font>
+<hr>
+<pre width="100">
+FUNCTION ZCA_PP_MRP.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(EV_MATNR) TYPE  ZCA_MARA-MATNR</font>
+<font color ="#0000FF">*"     REFERENCE(EV_GSMNG) TYPE  ZCA_STKO-BMENG</font>
+<font color ="#0000FF">*"     REFERENCE(EV_FLAG) TYPE  CHAR4 OPTIONAL</font>
+<font color ="#0000FF">*"  EXPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(ET_RESULT) TYPE  ZCA_PPT040</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zca_pp_mrp.html">Global data declarations</a></font>
+  PERFORM SELECT_DATA USING EV_MATNR  " 자재코드
+                            EV_GSMNG  " 수량수량
+                            EV_FLAG
+                      CHANGING ET_RESULT.
+
+  SORT ET_RESULT BY MATNR.
+
+ENDFUNCTION.
+
+
+TYPES: BEGIN OF TYS_SELECT_DATA,
+         MATNR TYPE ZCA_MARA-MATNR,
+         MENGE TYPE ZCA_MARD-TSTOCK,
+         MRART TYPE ZCA_MARA-MRART,
+         MEINS TYPE ZCA_STPO-MEINS,
+       END OF TYS_SELECT_DATA.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SELECT_DATA USING PV_MATNR TYPE ZCA_MARA-MATNR
+                       LV_GSMNG TYPE ZCA_STKO-BMENG
+                       EV_FLAG  TYPE C
+                 CHANGING ET_RESULT.
+
+  DATA: LT_SELECT_DATA TYPE TABLE OF TYS_SELECT_DATA,
+        LV_CALC_QTY    TYPE          ZCA_STKO-BMENG.
+
+  SELECT SINGLE *
+      FROM ZCA_STKO
+      WHERE MATNR EQ @PV_MATNR
+      INTO @DATA(LS_BOM_HEADER).
+
+  IF SY-SUBRC NE 0.
+    RETURN.
+  ENDIF.
+
+  LV_CALC_QTY =  LV_GSMNG / LS_BOM_HEADER-BMENG.
+
+  SELECT IDNRK, MENGE, MRART, STPO~MEINS
+    FROM ZCA_STPO AS STPO INNER JOIN ZCA_MARA AS MARA ON STPO~IDNRK EQ MARA~MATNR
+     INTO TABLE @LT_SELECT_DATA
+    WHERE STLNR EQ @LS_BOM_HEADER-STLNR.
+
+
+
+  PERFORM COLLECT_DATA USING LT_SELECT_DATA
+                             LV_CALC_QTY
+                             EV_FLAG
+                       CHANGING ET_RESULT.
+
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form COLLECT_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM COLLECT_DATA USING PT_SELECT_DATA
+                        PV_CALC_QTY TYPE ZCA_STKO-BMENG
+                        EV_FLAG     TYPE C
+                  CHANGING ET_RESULT.
+
+  DATA: LS_SELECT_DATA  TYPE TYS_SELECT_DATA,
+        LS_COLLECT_DATA TYPE ZCA_PPS030,
+        LV_CALC_QTY     TYPE ZCA_STKO-BMENG.
+
+  LOOP AT PT_SELECT_DATA INTO LS_SELECT_DATA.
+
+    LV_CALC_QTY = PV_CALC_QTY * LS_SELECT_DATA-MENGE.
+
+    CASE LS_SELECT_DATA-MRART.
+      WHEN 'ROH'.
+        IF EV_FLAG NE 'ONLY'.
+          LS_COLLECT_DATA = VALUE #(
+            MATNR = LS_SELECT_DATA-MATNR
+            PDQTY = LV_CALC_QTY
+            MEINS = LS_SELECT_DATA-MEINS
+          ).
+          COLLECT LS_COLLECT_DATA INTO ET_RESULT.
+        ENDIF.
+      WHEN OTHERS.
+        IF EV_FLAG EQ 'MRP'.
+          CONTINUE.
+        ENDIF.
+        CASE EV_FLAG.
+          WHEN 'ADD' OR 'ONLY'.
+            LS_COLLECT_DATA = VALUE #(
+              MATNR = LS_SELECT_DATA-MATNR
+              PDQTY = LV_CALC_QTY
+              MEINS = LS_SELECT_DATA-MEINS
+            ).
+            COLLECT LS_COLLECT_DATA INTO ET_RESULT.
+        ENDCASE.
+
+        IF EV_FLAG NE 'ADD'.
+          PERFORM SELECT_DATA USING LS_SELECT_DATA-MATNR
+                                    LV_CALC_QTY
+                                    EV_FLAG
+                              CHANGING ET_RESULT.
+
+        ENDIF.
+
+<font color ="#0000FF">*        IF EV_HALB_FLAG EQ ABAP_ON.</font>
+<font color ="#0000FF">*          LS_COLLECT_DATA = VALUE #(</font>
+<font color ="#0000FF">*            MATNR = LS_SELECT_DATA-MATNR</font>
+<font color ="#0000FF">*            PDQTY = LV_CALC_QTY</font>
+<font color ="#0000FF">*            MEINS = LS_SELECT_DATA-MEINS</font>
+<font color ="#0000FF">*          ).</font>
+<font color ="#0000FF">*          COLLECT LS_COLLECT_DATA INTO ET_RESULT.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+
+    ENDCASE.
+
+  ENDLOOP.
+
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

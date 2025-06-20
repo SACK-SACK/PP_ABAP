@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP080_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP080_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP080_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES ZCA_PPT030.
+DATA OK_CODE TYPE SY-UCOMM.
+
+<font color ="#0000FF">* ALV 관련 변수</font>
+DATA: GO_CONTAINER1 TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+      GO_ALV_GRID1  TYPE REF TO CL_GUI_ALV_GRID,
+      GO_CONTAINER2 TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+      GO_ALV_GRID2  TYPE REF TO CL_GUI_ALV_GRID.
+
+<font color ="#0000FF">* ALV Layout</font>
+DATA GS_LAYO1  TYPE LVC_S_LAYO.
+DATA GS_LAYO2  TYPE LVC_S_LAYO.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA GT_FCAT TYPE LVC_T_FCAT.
+DATA GS_FCAT TYPE LVC_S_FCAT.
+
+
+DATA GS_VARIANT TYPE DISVARIANT.
+DATA GV_SAVE    TYPE C.
+
+<font color ="#0000FF">* Search Help</font>
+TYPES: BEGIN OF TYS_F4,
+  MRPID  TYPE ZCA_PPT030-MRPID ,
+  PLNUM  TYPE ZCA_PPT030-PLNUM ,
+  PYEAR  TYPE ZCA_PPT010-PYEAR ,
+  PMONTH TYPE ZCA_PPT010-PMONTH,
+  PWEEK  TYPE ZCA_PPT010-PWEEK ,
+  END OF TYS_F4.
+
+DATA: GT_MRPID_F4 TYPE TABLE OF TYS_F4 WITH KEY MRPID PLNUM,
+      GS_MRPID_F4 TYPE          TYS_F4,
+      GV_MRPID    TYPE          ZCA_PPT030-MRPID.
+
+<font color ="#0000FF">* Tabstrip 제어</font>
+DATA DYNNR TYPE SY-DYNNR VALUE '0110'.
+CONTROLS: TABSTRIP TYPE TABSTRIP.
+
+DATA: BEGIN OF GS_DISPLAY_PPT030,
+        MRPID TYPE ZCA_PPT030-MRPID,
+        PLNUM TYPE ZCA_PPT030-PLNUM,
+        MATNR TYPE ZCA_PPT030-MATNR,
+        MAKTX TYPE ZCA_MAKT-MAKTX,
+        STOCK TYPE ZCA_PPT030-STOCK,
+        PLNQT TYPE ZCA_PPT030-PLNQT,
+        USEQT TYPE ZCA_PPT030-USEQT,
+        RESQT TYPE ZCA_PPT030-RESQT,
+        MEINS TYPE ZCA_PPT030-MEINS,
+        MRPDT TYPE ZCA_PPT030-MRPDT,
+        BANFN TYPE ZCA_PPT030-BANFN,
+      END OF GS_DISPLAY_PPT030,
+      GT_DISPLAY_PPT030 LIKE TABLE OF GS_DISPLAY_PPT030,
+      BEGIN OF GS_DISPLAY_EBAN,
+        BANFN       TYPE ZCA_EBAN-BANFN,
+        MATNR       TYPE ZCA_EBAN-MATNR,
+        MAKTX       TYPE ZCA_MAKT-MAKTX,
+        MRPID       TYPE ZCA_EBAN-MRPID,
+        WERKS       TYPE ZCA_EBAN-WERKS,
+        PRAMT       TYPE ZCA_EBAN-PRAMT,
+        MEINS       TYPE ZCA_EBAN-MEINS,
+        BADAT       TYPE ZCA_EBAN-BADAT,
+        BANPR       TYPE ZCA_EBAN-BANPR,
+        STATUS_ICON TYPE ICON-ID,
+      END OF GS_DISPLAY_EBAN,
+      GT_DISPLAY_EBAN LIKE TABLE OF GS_DISPLAY_EBAN.
+
+DATA GV_TITLE_SCR100 TYPE STRING.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

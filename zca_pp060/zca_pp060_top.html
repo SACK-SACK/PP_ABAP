@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP060_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP060_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP060_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+TYPES: NODE_TABLE_TYPE  LIKE STANDARD TABLE OF MTREESNODE WITH DEFAULT KEY.
+DATA: GO_TREE_CON TYPE REF TO CL_GUI_CUSTOM_CONTAINER,  "컨테이너
+      GO_TREE     TYPE REF TO CL_GUI_SIMPLE_TREE.       "트리 컨테이너 참조변수
+
+
+DATA: GO_CONTAINER TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+      GO_ALV_GRID  TYPE REF TO CL_GUI_ALV_GRID,
+      OK_CODE      TYPE SY-UCOMM.
+
+DATA: BEGIN OF GS_PLNUM_F4,
+   PLNUM  TYPE ZCA_PPT010-PLNUM ,
+   PYEAR  TYPE ZCA_PPT010-PYEAR ,
+   PMONTH TYPE ZCA_PPT010-PMONTH,
+   PWEEK  TYPE ZCA_PPT010-PWEEK ,
+   PLWRK  TYPE ZCA_PPT010-PLWRK ,
+   PSTTR  TYPE ZCA_PPT010-PSTTR ,
+   PEDTR  TYPE ZCA_PPT010-PEDTR ,
+   MRPID  TYPE ZCA_PPT010-MRPID ,
+  END OF GS_PLNUM_F4,
+  GT_PLNUM_F4 LIKE TABLE OF GS_PLNUM_F4,
+  GV_PLNUM TYPE ZCA_PPT010-PLNUM.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA GT_FCAT TYPE LVC_T_FCAT.
+DATA GS_FCAT TYPE LVC_S_FCAT.
+<font color ="#0000FF">* ALV Layout</font>
+DATA GS_LAYO TYPE LVC_S_LAYO.
+DATA GS_VARIANT TYPE DISVARIANT.
+DATA GV_SAVE    TYPE C.
+
+DATA: BEGIN OF GS_DATA,
+        PLNUM  TYPE ZCA_PPT010-PLNUM,
+        PYEAR  TYPE ZCA_PPT010-PYEAR,
+        PMONTH TYPE ZCA_PPT010-PMONTH,
+        PWEEK  TYPE ZCA_PPT010-PWEEK,
+        PSTTR  TYPE ZCA_PPT010-PSTTR,
+        PEDTR  TYPE ZCA_PPT010-PEDTR,
+        MRPID  TYPE ZCA_PPT010-MRPID,
+        ERNAM  TYPE ZCA_PPT010-ERNAM,
+        ERDAT  TYPE ZCA_PPT010-ERDAT,
+        ERZET  TYPE ZCA_PPT010-ERZET,
+        PLWRK  TYPE ZCA_PPT010-PLWRK, "플랜트 ID
+        PNAME  TYPE ZCA_T001W-PNAME,
+        MATNR  TYPE ZCA_PPT020-MATNR,
+        MAKTX  TYPE ZCA_MAKT-MAKTX,
+        GSMNG  TYPE ZCA_PPT020-GSMNG,
+        MEINS  TYPE ZCA_PPT020-MEINS,
+      END OF GS_DATA,
+      GT_DATA LIKE TABLE OF GS_DATA.
+
+
+TABLES: ZCA_PPT010.
+RANGES: SO_PLNUM  FOR ZCA_PPT010-PLNUM,
+        SO_PYEAR  FOR ZCA_PPT010-PYEAR,
+        SO_PMONTH FOR ZCA_PPT010-PMONTH,
+        SO_PWEEK  FOR ZCA_PPT010-PWEEK,
+        SO_PLWRK  FOR ZCA_PPT010-PLWRK,
+        SO_DATE   FOR ZCA_PPT010-PSTTR.
+
+DATA: GV_PLAN_INFO         TYPE STRING,
+      GV_FIELD_CHANGE_FLAG TYPE C,
+      GV_FIELD_CHANGE_FLAG_MONTH TYPE C.
+
+DATA GV_TITLE_SCR100 TYPE STRING.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

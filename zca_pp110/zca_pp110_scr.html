@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP110_SCR</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP110_SCR</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_PP110_SCR</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP110_SCR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+"Selection screen 검색조건 생성
+" 플랜트 ID (필수), 생산시작일 (필수), 자재코드
+SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME TITLE TEXT-001.
+  PARAMETERS     : p_werks TYPE zca_aufk-werks DEFAULT 'P001' OBLIGATORY MATCHCODE OBJECT zca_sh_werks2.
+  SELECT-OPTIONS : s_psday FOR zca_aufk-psday  DEFAULT sy-datum NO-EXTENSION NO INTERVALS OBLIGATORY,
+                   s_matnr FOR zca_aufk-matnr NO-EXTENSION NO INTERVALS MATCHCODE OBJECT zca_sh_matnr2.
+SELECTION-SCREEN END OF BLOCK b01.
+
+"Selection screen App toolbar 버튼 생성
+SELECTION-SCREEN FUNCTION KEY 1.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

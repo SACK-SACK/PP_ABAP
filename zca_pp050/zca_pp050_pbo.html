@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP050_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP050_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP050_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE STATUS_0100 OUTPUT.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* ALV Tree에서 선택한 Node가 있으면 GS_YMW( Year Month Week ) 가 있는 상태</font>
+<font color ="#0000FF">*   ㄴ 선택한 주차 생산계획이 있는지 확인</font>
+<font color ="#0000FF">*       ㄴ 생산계획이 있다 - 생산계획 버튼 비활성화 & 생산계획 검색</font>
+<font color ="#0000FF">*       ㄴ 생산계획이 없다 - 생산계획 버튼 활성화</font>
+<font color ="#0000FF">* INITIAL 상태면 선택하지 않은상태</font>
+<font color ="#0000FF">*   ㄴ 생산계획 생성 버튼 '비활성화'</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+  IF GS_YMW IS INITIAL.
+    DATA: LT_FCODE TYPE TABLE OF SY-UCOMM.
+
+    APPEND 'CREATE'  TO LT_FCODE.
+    APPEND 'DISPLAY' TO LT_FCODE.
+    APPEND 'ORDER'   TO LT_FCODE.
+
+    SET PF-STATUS '0100' EXCLUDING LT_FCODE.
+
+    SET TITLEBAR  '0100' WITH GV_TITLE_SCR100.
+    STATUS_ICON = ICON_NO_STATUS.
+    STATUS_TEXT = '주차를 선택해주세요.'.
+
+  ELSE.
+    PERFORM CHECK_DATA_1ROW CHANGING GV_CHECK_1ROW
+                                     GV_CREATABLE_PLAN.
+
+    IF GV_CHECK_1ROW EQ 'X'.
+      SET PF-STATUS '0100' EXCLUDING 'CREATE'.
+      STATUS_ICON = ICON_LED_GREEN.
+      STATUS_TEXT = '생성된 생산계획이 있습니다.'.
+      PERFORM GET_PLAN_DATA.
+
+    ELSE.
+
+      IF GV_CREATABLE_PLAN EQ ABAP_ON.
+        REFRESH LT_FCODE.
+        APPEND 'DISPLAY' TO LT_FCODE.
+        APPEND 'ORDER'   TO LT_FCODE.
+        SET PF-STATUS '0100' EXCLUDING LT_FCODE.
+        STATUS_ICON = ICON_LED_RED.
+        STATUS_TEXT = '생성된 생산계획이 없습니다.'.
+        CLEAR ZCA_PPT010.
+        CLEAR GT_PLAN_DATA.
+
+      ELSE.
+        REFRESH LT_FCODE.
+        APPEND 'CREATE'  TO LT_FCODE.
+        APPEND 'DISPLAY' TO LT_FCODE.
+        APPEND 'ORDER'   TO LT_FCODE.
+        SET PF-STATUS '0100' EXCLUDING LT_FCODE.
+        STATUS_ICON = ICON_NO_STATUS.
+        STATUS_TEXT = '이전 주차의 생산계획이 생성되지 않았습니다.'.
+        CLEAR ZCA_PPT010.
+        CLEAR GT_PLAN_DATA.
+
+      ENDIF.
+
+
+    ENDIF.
+
+    DATA(LV_TITLE) = GV_TITLE_SCR100 && | - { GS_YMW-YEAR }년 { GS_YMW-MONTH }월 { GS_YMW-WEEK }주차|.
+    SET TITLEBAR '0100' WITH LV_TITLE.
+  ENDIF.
+
+
+  CLEAR: GV_CHECK_1ROW, GV_CREATABLE_PLAN.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CLEAR_OK_CODE OUTPUT.
+  CLEAR OK_CODE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_TREE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE INIT_TREE OUTPUT.
+
+  IF GO_TREE IS INITIAL.
+    DATA: EVENTS TYPE CNTL_SIMPLE_EVENTS,   "더블클릭 이벤트
+          EVENT  TYPE CNTL_SIMPLE_EVENT.    "더블클릭 이벤트.
+
+    CREATE OBJECT GO_TREE_CON
+      EXPORTING
+        REPID     = SY-CPROG                 " Report to Which This Docking Control is Linked
+        DYNNR     = SY-DYNNR                " Screen to Which This Docking Control is Linked
+        SIDE      = CL_GUI_DOCKING_CONTAINER=&gt;DOCK_AT_LEFT   " Side to Which Control is Docked
+        EXTENSION = 450.
+
+<font color ="#0000FF">*TREE 컨트롤 생성, CLASS를 INSTANCE</font>
+    CREATE OBJECT GO_TREE
+      EXPORTING
+        PARENT              = GO_TREE_CON
+        NODE_SELECTION_MODE = CL_GUI_SIMPLE_TREE=&gt;NODE_SEL_MODE_SINGLE. "싱글선택
+
+    PERFORM SET_NODE.
+
+<font color ="#0000FF">*이벤트</font>
+    CREATE OBJECT GO_DOUBLE_CLICK.
+
+    EVENT-EVENTID = CL_GUI_SIMPLE_TREE=&gt;EVENTID_NODE_DOUBLE_CLICK.
+    EVENT-APPL_EVENT = 'X'.
+    APPEND EVENT TO EVENTS.
+
+<font color ="#0000FF">*트리 이벤트 등록</font>
+    CALL METHOD GO_TREE-&gt;SET_REGISTERED_EVENTS
+      EXPORTING
+        EVENTS                    = EVENTS
+      EXCEPTIONS
+        CNTL_ERROR                = 1
+        CNTL_SYSTEM_ERROR         = 2
+        ILLEGAL_EVENT_COMBINATION = 3.
+
+<font color ="#0000FF">*이벤트 핸들러</font>
+    SET HANDLER GO_DOUBLE_CLICK-&gt;HANDLE_NODE_DOUBLE_CLICK FOR GO_TREE.
+
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CREATE_CONTAINER OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CREATE_CCON OUTPUT.
+
+  IF GO_CONTAINER IS INITIAL.
+
+<font color ="#0000FF">*   Container, Grid 객체 생성</font>
+    PERFORM CREATE_SCREEN_OBJ USING GO_CONTAINER
+                                    GO_ALV_GRID
+                                    'CCON'.
+<font color ="#0000FF">*   Layout 설정</font>
+    PERFORM SET_LAYOUT USING '납기 세부일정'.
+<font color ="#0000FF">*   Field Catalog 설정</font>
+    PERFORM SET_FIELD_CATALOG.
+<font color ="#0000FF">*   ALV 출력</font>
+    PERFORM SHOW_ALV.
+
+  ELSE.
+
+    PERFORM REFRESH_GRID USING GO_ALV_GRID.
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CREATE_CCON_PLAN OUTPUT</font>
+<font color ="#0000FF">**&---------------------------------------------------------------------*</font>
+MODULE CREATE_CCON_PLAN OUTPUT.
+
+  IF GO_CONTAINER_PLAN IS INITIAL.
+
+<font color ="#0000FF">*   Container, Grid 객체 생성</font>
+    PERFORM CREATE_SCREEN_OBJ USING GO_CONTAINER_PLAN
+                                    GO_ALV_GRID_PLAN
+                                    'CCON2'.
+
+
+<font color ="#0000FF">*   Layout 설정</font>
+    PERFORM SET_LAYOUT USING '생산계획 상세정보'.
+<font color ="#0000FF">*   Field Catalog 설정</font>
+    PERFORM SET_FCAT_PLAN.
+
+    PERFORM SHOW_ALV_PLAN.
+
+  ELSE.
+    PERFORM REFRESH_GRID USING GO_ALV_GRID_PLAN.
+
+  ENDIF.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

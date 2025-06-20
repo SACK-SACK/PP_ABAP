@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_PP120_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_PP120_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_PP120_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE STATUS_0100 OUTPUT.
+  SET TITLEBAR  '0100' WITH GV_TITLE_SCR100.
+
+  READ TABLE GT_DISPLAY WITH KEY STATUS_ICON = '@5D@' TRANSPORTING NO FIELDS.
+
+  IF SY-SUBRC EQ 0.
+    SET PF-STATUS '0100'.
+
+  ELSE.
+    SET PF-STATUS '0100' EXCLUDING 'CREATE'.
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CLEAR_OK_CODE OUTPUT.
+  CLEAR OK_CODE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_SCREEN_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE SET_SCREEN_0100 OUTPUT.
+
+  IF GV_CHECK_DATE_FLAG EQ ABAP_ON.
+    PERFORM SET_TAB_TITLE.
+    CLEAR GV_CHECK_DATE_FLAG.
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE INIT_ALV_0100 OUTPUT.
+
+  IF GO_CONTAINER IS INITIAL.
+
+<font color ="#0000FF">*   Container, Grid 객체 생성</font>
+    PERFORM CREATE_SCREEN_OBJ USING GO_CONTAINER
+                                    GO_ALV_GRID
+                                    'CCON'.
+<font color ="#0000FF">*   Layout 설정</font>
+    PERFORM SET_LAYOUT_0100.
+<font color ="#0000FF">*   Field Catalog 설정</font>
+    PERFORM SET_FIELD_CATALOG.
+<font color ="#0000FF">*   ALV 출력</font>
+    PERFORM SHOW_ALV USING GO_ALV_GRID
+                           GT_DISPLAY
+                           GS_LAYO_0100.
+
+  ELSE.
+
+    GS_LAYO_0110-GRID_TITLE = |{ GS_DATE-PYEAR }년 { GS_DATE-PMONTH }월 { GS_DATE-PWEEK }주차 생산 실적 모니터링|.
+
+    PERFORM REFRESH_GRID USING GO_ALV_GRID
+                               GS_LAYO_0100.
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE STATUS_0110 OUTPUT.
+  DATA: LT_FCODE TYPE TABLE OF SY-UCOMM.
+
+<font color ="#0000FF">* Hotspot 클릭을 통해 생산오더 ID가 화면에 표시되지 않았거나,</font>
+<font color ="#0000FF">* Hotspot 클릭을 했을 때, 이미 생산실적이 입력이 되었으면 SAVE와 Display/Change ( 이하 MODE ) 숨김</font>
+  IF ZCA_AFRU IS INITIAL OR ZCA_AFRU-RUECK IS NOT INITIAL.
+    REFRESH LT_FCODE.
+    APPEND 'SAVE' TO LT_FCODE.
+    APPEND 'MODE' TO LT_FCODE.
+
+<font color ="#0000FF">* 생산 실적 입력이 필요한 항목이 더이상 없을 때 ALL 숨김처리</font>
+    IF GT_DIALOG_DISPLAY IS NOT INITIAL.
+      READ TABLE GT_DIALOG_DISPLAY WITH KEY RUECK = '' TRANSPORTING NO FIELDS.
+      IF SY-SUBRC NE 0.
+        APPEND 'ALL' TO LT_FCODE.
+      ENDIF.
+    ENDIF.
+
+    SET PF-STATUS '0110' EXCLUDING LT_FCODE.
+
+<font color ="#0000FF">* Input Field가 열린 상태를 의미하는 GV_SCREEN_FLAG의 값이 INITIAL일 때 ( Display Mode 일 때 ) SAVE 숨김</font>
+  ELSEIF GV_SCREEN_FLAG EQ ABAP_OFF.
+    REFRESH LT_FCODE.
+    APPEND 'SAVE' TO LT_FCODE.
+    SET PF-STATUS '0110' EXCLUDING LT_FCODE.
+
+<font color ="#0000FF">* GV_SCREEN_FLAG의 값이 'X'일 때 SAVE와 MODE 모두 표시</font>
+  ELSE.
+    SET PF-STATUS '0110'.
+
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE INIT_ALV_0110 OUTPUT.
+
+  IF GO_CONTAINER_0110 IS INITIAL.
+
+<font color ="#0000FF">*   Container, Grid 객체 생성</font>
+    PERFORM CREATE_SCREEN_OBJ USING GO_CONTAINER_0110
+                                    GO_ALV_GRID_0110
+                                    'CCON_0110'.
+<font color ="#0000FF">*   Layout 설정</font>
+    PERFORM SET_LAYOUT_0110.
+<font color ="#0000FF">*   Field Catalog 설정</font>
+    PERFORM SET_FIELD_CATALOG_0110.
+<font color ="#0000FF">*   ALV 출력</font>
+    PERFORM SHOW_ALV USING GO_ALV_GRID_0110
+                           GT_DIALOG_DISPLAY
+                           GS_LAYO_0110.
+
+  ELSE.
+    PERFORM REFRESH_GRID USING GO_ALV_GRID_0110
+                               GS_LAYO_0110.
+
+  ENDIF.
+
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module MOVE_ORDER_DATA OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE MOVE_ORDER_DATA OUTPUT.
+
+<font color ="#0000FF">* Dialog(Screen 110) ALV에 표시되는 Itab에 값이 없을 때,</font>
+<font color ="#0000FF">* 생산오더 PHAS3에 'X'가 찍히지 않은 (생산실적 입력 X) 행들만 가져오는 로직</font>
+  IF GT_DIALOG_DISPLAY IS INITIAL.
+    REFRESH GT_DIALOG_DISPLAY.
+
+    LOOP AT GT_DISPLAY INTO GS_DISPLAY.
+      IF GS_DISPLAY-STATUS_ICON EQ '@5D@'. " Yellow LED
+        GS_DIALOG_DISPLAY = VALUE #(
+          AUFNR = GS_DISPLAY-AUFNR
+          MATNR = GS_DISPLAY-MATNR
+          MAKTX = GS_DISPLAY-MAKTX
+          STLNR = GS_DISPLAY-STLNR
+          GAMNG = GS_DISPLAY-GAMNG
+          STATUS_ICON = GS_DISPLAY-STATUS_ICON
+        ).
+
+        APPEND GS_DIALOG_DISPLAY TO GT_DIALOG_DISPLAY.
+
+      ENDIF.
+    ENDLOOP.
+
+  ENDIF.
+
+  CLEAR GS_DISPLAY.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_HANDLER_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE SET_HANDLER_0110 OUTPUT.
+  SET HANDLER LCL_EVENT_HANDLER=&gt;ON_HOTSPOT_CLICK FOR GO_ALV_GRID_0110.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CONTROL_SEARCH_FIELD OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE CONTROL_SEARCH_FIELD OUTPUT.
+  LOOP AT SCREEN.
+
+<font color ="#0000FF">* Input Field : ZCA_AFRU-DISPOS ( 폐기수량 입력 ) 제어</font>
+    IF SCREEN-NAME EQ 'ZCA_AFRU-DISPOS'.
+
+      CASE GV_SCREEN_FLAG.
+        WHEN ABAP_ON.
+          SCREEN-INPUT = '1'.
+        WHEN OTHERS.
+          SCREEN-INPUT = '0'.
+      ENDCASE.
+      MODIFY SCREEN.
+    ENDIF.
+
+  ENDLOOP.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_HANDLER_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE SET_HANDLER_0100 OUTPUT.
+  SET HANDLER LCL_EVENT_HANDLER=&gt;HANDLE_DOUBLE_CLICK FOR GO_ALV_GRID.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0120 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE STATUS_0120 OUTPUT.
+  SET PF-STATUS '0120'.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>
